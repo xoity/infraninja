@@ -1,0 +1,8 @@
+# Netdata configuration
+
+[global]
+  hostname = {{ host.data.hostname }}
+  dbengine multihost disk space = {{ host.data.dbengine_multihost_disk_space }}
+
+[web]
+	mode = {{ host.data.web_mode }}
