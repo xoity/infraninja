@@ -7,7 +7,11 @@ DEFAULTS = {
     "claim_url": "https://app.netdata.cloud",
     "reclaim": False,
     "dbengine_multihost_disk_space": 2048,
-    "web_mode": None,
+    "stream": {
+        "enabled": False,
+        "destination": "streaming.netdata.cloud",
+        "api_key": "XXXXX",
+    },
 }
 
 
