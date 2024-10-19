@@ -1,21 +1,20 @@
 Vagrant.configure("2") do |config|
-  # Create an Ubuntu VM
+  
+  # Define the Ubuntu VM
   config.vm.define "ubuntu" do |ubuntu|
-    ubuntu.vm.box = "ubuntu/focal64"
-    ubuntu.vm.network "private_network", type: "dhcp"
-    ubuntu.vm.provider "virtualbox" do |vb|
-      vb.memory = "1024"
-      vb.cpus = 1
+    ubuntu.vm.box = "generic/ubuntu2004"  # Use an Ubuntu box compatible with libvirt
+    ubuntu.vm.provider "libvirt" do |libvirt|
+      libvirt.memory = 1024  # Set the VM memory size
+      libvirt.cpus = 2       # Set the number of CPU cores
     end
   end
 
-  # Create an Alpine VM
+  # Define the Alpine VM
   config.vm.define "alpine" do |alpine|
-    alpine.vm.box = "generic/alpine316"
-    alpine.vm.network "private_network", type: "dhcp"
-    alpine.vm.provider "virtualbox" do |vb|
-      vb.memory = "1024"
-      vb.cpus = 1
+    alpine.vm.box = "generic/alpine316"  # Use an Alpine box compatible with libvirt
+    alpine.vm.provider "libvirt" do |libvirt|
+      libvirt.memory = 512  # Set the VM memory size
+      libvirt.cpus = 1      # Set the number of CPU cores
     end
   end
 end
