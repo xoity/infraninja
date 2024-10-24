@@ -1,6 +1,6 @@
+import pyinfra
 from pyinfra.api import deploy
 from infraninja.security import security_setup
-from infraninja.docker import install_docker
 from infraninja.common import system_update
 
 @deploy('Test Security Setup and Docker')
@@ -9,6 +9,7 @@ def test_deploy():
     security_setup()
     # Run common system updates
     system_update()
+    
 
 # Specify the VMs as inventory
 inventory = [
