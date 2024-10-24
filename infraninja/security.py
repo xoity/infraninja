@@ -7,14 +7,14 @@ os = host.fact.linux_name
 @deploy('Harden SSH and Security Setup')
 def security_setup():
     os = host.fact.linux_name
-ssh_config = {
-    "PermitRootLogin": "prohibit-password",
-    "PasswordAuthentication": "no",
-    "X11Forwarding": "no",
-}
+    ssh_config = {
+        "PermitRootLogin": "prohibit-password",
+        "PasswordAuthentication": "no",
+        "X11Forwarding": "no",
+    }
 
     # Harden SSH
-for option, value in ssh_config.items():
+    for option, value in ssh_config.items():
         files.line(
             name=f"Configure SSH: {option}",
             path="/etc/ssh/sshd_config",
