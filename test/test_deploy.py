@@ -7,10 +7,6 @@ from infraninja.common import system_update
 def test_deploy():
     # Run the security setup
     security_setup()
-    
-    # Install Docker
-    install_docker()
-
     # Run common system updates
     system_update()
 
