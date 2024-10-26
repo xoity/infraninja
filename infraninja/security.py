@@ -1,6 +1,10 @@
-from pyinfra.operations import apt, apk, files, systemd, openrc
-from pyinfra import host
+from pyinfra.operations import apt, apk, systemd, openrc
+from pyinfra import host, config
 from pyinfra.api import deploy
+from pyinfra.facts.server import LinuxName
+
+
+config.SUDO = True
 
 class UnsupportedOSError(Exception):
     pass
@@ -8,13 +12,13 @@ class UnsupportedOSError(Exception):
 # Mapping for package managers and services based on OS
 def setup_ubuntu():
 
-    apt.packages(name="Install security tools", packages=["fail2ban", "ufw"], sudo=True)
+    apt.packages(name="Install security tools", packages=["fail2ban", "ufw"])
     systemd.service(name="Enable Fail2Ban", service="fail2ban", running=True, enabled=True)
     systemd.service(name="Enable Firewall", service="ufw", running=True, enabled=True)
 
 def setup_alpine():
 
-    apk.packages(name="Install security tools", packages=["fail2ban", "iptables"], sudo=True)
+    apk.packages(name="Install security tools", packages=["fail2ban", "iptables"])
     openrc.service(name="Enable Fail2Ban", service="fail2ban", running=True, enabled=True)
     openrc.service(name="Enable Firewall", service="iptables", running=True, enabled=True)
 
@@ -29,14 +33,13 @@ OS_SETUP_FUNCTIONS = {
 @deploy('Harden SSH and Security Setup')
 def security_setup():
     # Fetch the OS name
-    os_name = host.fact.linux_name
-
+    os = host.get_fact(LinuxName)
     try:
         # Execute the OS-specific setup function (like a switch-case)
-        os_setup_function = OS_SETUP_FUNCTIONS.get(os_name)
+        os_setup_function = OS_SETUP_FUNCTIONS.get(os)
         
         if os_setup_function is None:
-            raise UnsupportedOSError(f"Security setup for {os_name} is not supported.")
+            raise UnsupportedOSError(f"Security setup for {os} is not supported.")
         
         # Call the respective function to handle the setup
         os_setup_function()
