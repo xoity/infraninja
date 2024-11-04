@@ -1,10 +1,21 @@
-from pyinfra.operations import apt, apk, files, server
+from pyinfra.operations import apt, apk, files, server, systemd, openrc
 from pyinfra import host, config
 from pyinfra.api import deploy
 from pyinfra.facts.server import LinuxName
 
 os = host.get_fact(LinuxName)  
 config.SUDO = True
+
+# we can add common services that are not needed in most cases, scalable.
+common_services = ["avahi-daemon", "cups", "bluetooth", "rpcbind", "vsftpd", "telnet"] # network discovery, printing, bluetooth, rpc for NTFs, ftp, telnet
+
+ssh_config = {
+        "PermitRootLogin": "prohibit-password",
+        "PasswordAuthentication": "no",
+        "X11Forwarding": "no",
+    }
+
+
 @deploy('Common System Updates')
 def system_update():
     if os == 'Ubuntu':
@@ -19,11 +30,6 @@ def system_update():
 @deploy("ssh common hardening test")
 def ssh_common_hardening():
 
-    ssh_config = {
-        "PermitRootLogin": "prohibit-password",
-        "PasswordAuthentication": "no",
-        "X11Forwarding": "no",
-    }
 
     # Apply SSH configuration
     for option, value in ssh_config.items():
@@ -68,3 +74,12 @@ def uae_ia_compliance():
         name="Backup firewall configuration",
         commands=["iptables-save > /etc/firewall.backup"]
     )
+
+@deploy('Disable useless services common')
+def disable_useless_services_common():
+    for service in common_services:
+        if os == 'Ubuntu':
+            systemd.service(service, running=False, enabled=False)
+        if os == 'Alpine':
+            openrc.service(service, running=False, enabled=False)
+    
