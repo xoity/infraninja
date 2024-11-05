@@ -30,26 +30,18 @@ def system_update():
 @deploy("ssh common hardening test")
 def ssh_common_hardening():
 
-
-    # Apply SSH configuration
     for option, value in ssh_config.items():
-        files.line(
+        files.replace(
             name=f"Configure SSH: {option}",
             path="/etc/ssh/sshd_config",
-            line=f"{option} {value}"
+            # select the entire line starting with the option from the file in path and delete the old option (e.g. PermitRootLogin) and replace it with the new value (e.g. prohibit-password) and remove the old value (e.g. yes), and if the line has a comment in the start, remove that comment and replace it with the new value
+            line=f"^{option} .*$",
+            replace=f"{option} {value}",  # Ensure only the intended setting remains
         )
-
 
 @deploy('UAE IA compliance')
 def uae_ia_compliance():
-        
-    # T3.6.2: Capture user activities, exceptions, security events, and more
-    files.line(
-        name="Log user activity and system events",
-        path="/etc/audit/audit.rules",
-        line="-w /etc/passwd -p wa -k identity\n-w /etc/shadow -p wa -k auth\n-w /var/log/auth.log -p wa -k logins"
-    )
-
+    
     # T3.6.3: Log privileged operations and unauthorized access attempts
     files.line(
         name="Log privileged operations and unauthorized access",
