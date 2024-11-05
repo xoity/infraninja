@@ -69,8 +69,8 @@ def setup_ubuntu():
         systemd.service("clamav-freshclam", running=False, enabled=True)
         server.shell(name="Update ClamAV database", commands="freshclam")
         systemd.service("clamav-freshclam", running=True, enabled=True)
-
-    # Fail2Ban configuration (if installed)
+    
+    # Fail2Ban configuration (configure it nigag) (if installed)
     if security_tools["fail2ban"]:
         systemd.service("fail2ban", running=True, enabled=True)
 
@@ -118,6 +118,12 @@ def setup_ubuntu():
             name="Start Suricata with logging",
             commands=["suricata -c /etc/suricata/suricata.yaml -i eth0 -D > /var/log/suricata/suricata.log"]
         )
+        files.line(
+        name="Log user activity and system events",
+        path="/etc/audit/audit.rules",
+        line="-w /etc/passwd -p wa -k identity\n-w /etc/shadow -p wa -k auth\n-w /var/log/auth.log -p wa -k logins"
+    )
+
 
     # IPtables setup and logging
     server.shell(
