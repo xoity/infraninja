@@ -1,6 +1,7 @@
 from pyinfra.api import deploy
 from pyinfra.operations import systemd, openrc
 from pyinfra import host, config
+from pyinfra.facts.server import LinuxName
 
 os = host.get_fact(LinuxName)  
 config.SUDO = True
