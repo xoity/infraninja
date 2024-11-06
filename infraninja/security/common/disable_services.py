@@ -1,5 +1,9 @@
 from pyinfra.api import deploy
 from pyinfra.operations import systemd, openrc
+from pyinfra import host, config
+
+os = host.get_fact(LinuxName)  
+config.SUDO = True
 
 common_services = ["avahi-daemon", "cups", "bluetooth", "rpcbind", "vsftpd", "telnet"] # network discovery, printing, bluetooth, rpc for NTFs, ftp, telnet
 
