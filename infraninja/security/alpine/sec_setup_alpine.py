@@ -6,14 +6,6 @@ from os.path import exists
 config.SUDO = True
 media = "/dev/sda1"  
 
-
-# ACL paths specific to Alpine
-ACL_PATHS = {
-    '/etc/iptables/': 'u:admin:rx',
-    '/etc/suricata/': 'u:security:rw',
-}
-
-
 # Dictionary for tools and their installation status
 security_tools = {
     "fail2ban": True,
@@ -110,9 +102,12 @@ def setup_alpine():
 
 
 def set_acls():
-    """
-    Applies access control lists (ACLs) for specific security paths on Alpine.
-    """
+    # ACL paths specific to Alpine
+    ACL_PATHS = {
+        '/etc/iptables/': 'u:admin:rx',
+        '/etc/suricata/': 'u:security:rw',
+    }
+
     for path, acl_rule in ACL_PATHS.items():
         server.shell(
             name=f"Set ACL for {path}",
