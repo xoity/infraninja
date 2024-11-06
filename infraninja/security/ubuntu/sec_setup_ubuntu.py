@@ -1,7 +1,6 @@
 from pyinfra.operations import apt, files, server, systemd
 from pyinfra import host, config
 from pyinfra.api import deploy
-from pyinfra.facts.server import LinuxName
 from os.path import exists
 
 
@@ -137,4 +136,19 @@ def setup_ubuntu():
 
     )
 
-    set_acls("Ubuntu")
+    set_acls()
+
+
+def set_acls():
+    
+    ACL_PATHS = {
+        '/etc/fail2ban': 'u:admin:rwx',
+        '/var/log/lynis-report.dat': 'u:security:r',
+        '/etc/audit/audit.rules': 'g:audit:rwx',
+    }
+
+    for path, acl_rule in ACL_PATHS.items():
+        server.shell(
+            name=f"Set ACL for {path}",
+            commands=[f"setfacl -m {acl_rule} {path}"]
+        )
