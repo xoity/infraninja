@@ -1,5 +1,8 @@
 from pyinfra.operations import files, systemd
 from pyinfra.api import deploy
+from pyinfra import config
+
+config.SUDO = True
 
 ssh_config = {
     "PermitRootLogin": "prohibit-password",
@@ -17,7 +20,7 @@ def ssh_hardening():
         change = files.replace(
             name=f"Configure SSH: {option}",
             path="/etc/ssh/sshd_config",
-            line=f"^{option} .*$",
+            text=f"^{option} .*$",
             replace=f"{option} {value}",
         )
         
