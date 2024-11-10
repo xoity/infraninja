@@ -22,8 +22,6 @@ security_tools = {
 }
 
 def setup_alpine():
-    apk.update(name="Update package lists")
-    apk.upgrade(name="Upgrade all packages")
 
     # Install required security tools
     tools_to_install = [tool for tool, install in security_tools.items() if install]
