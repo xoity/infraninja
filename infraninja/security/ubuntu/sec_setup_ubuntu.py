@@ -37,8 +37,6 @@ ACL_PATHS = {
 
 # Mapping for package managers and services based on OS
 def setup_ubuntu():
-    apt.update(name="Update package lists")
-    apt.upgrade(name="Upgrade all packages")
 
     # Install required security tools
     tools_to_install = [tool for tool, install in security_tools.items() if install]
