@@ -1,17 +1,38 @@
 import pyinfra
 from pyinfra.api import deploy
-from infraninja.security import security_setup
-from infraninja.common import system_update, ssh_common_hardening, uae_ia_compliance, disable_useless_services_common
-from pyinfra import host 
+
+#alpine
+from infraninja.security.alpine.install_tools import install_security_tools
+from infraninja.security.alpine.chkrootkit_setup import chkrootkit_setup_alpine
+from infraninja.security.alpine.clamav_setup import clamav_setup
+from infraninja.security.alpine.fail2ban_setup import fail2ban_setup_alpine
+from infraninja.security.alpine.lynis_setup import lynis_setup
+from infraninja.security.alpine.suricata_setup import suricata_setup
+from infraninja.security.alpine.iptables_setup import iptables_setup_alpine
 
 
 @deploy('Test Security Setup')
 def test_deploy():
-    security_setup()
-    system_update()
-    ssh_common_hardening()
-    uae_ia_compliance()
-    disable_useless_services_common()
+    # Run the install_security_tools deploy
+    install_security_tools()
+
+    # Run the chkrootkit_setup deploy
+    chkrootkit_setup_alpine()
+
+    # Run the clamav_setup deploy
+    clamav_setup()
+
+    # Run the fail2ban_setup deploy
+    fail2ban_setup_alpine()
+
+    # Run the lynis_setup deploy
+    lynis_setup()
+
+    # Run the suricata_setup deploy
+    suricata_setup()
+
+    # Run the iptables_setup deploy
+    iptables_setup_alpine()
     
 
 

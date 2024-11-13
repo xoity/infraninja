@@ -1,6 +1,7 @@
 from pyinfra import config, host
 from pyinfra.api import deploy
 from pyinfra.operations import apk
+from pyinfra.facts.apk import ApkPackages
 
 config.SUDO = True
 
@@ -51,6 +52,7 @@ DEFAULTS = {
 }
 
 
+
 @deploy("Install Security Tools", data_defaults=DEFAULTS)
 def install_security_tools():
     # Loop over each tool in the host data
@@ -59,7 +61,12 @@ def install_security_tools():
         if tool_data["install"]:
             # Check if the primary package is already installed
             primary_package = tool_data["packages"][0]
-            if not host.fact.apk.is_installed(primary_package):
+            
+            # Get installed packages fact
+            installed_packages = host.get_fact(ApkPackages)
+            
+            # Check if package is installed
+            if primary_package not in installed_packages:
                 # Install the specified packages for this tool
                 apk.packages(
                     name=f"Install {tool} and related packages",
