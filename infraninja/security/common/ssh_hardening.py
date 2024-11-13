@@ -22,7 +22,7 @@ def ssh_hardening():
             name=f"Configure SSH: {option}",
             path="/etc/ssh/sshd_config",
             text=f"^{option} .*$",
-            replace=f"{option} {value}",
+            replace=f"{option.removeprefix("#")} {value}",
         )
 
         # If any change was detected, set `config_changed` to True
