@@ -1,14 +1,15 @@
-from pyinfra.operations import  files, systemd
-from pyinfra.api import deploy
 from pyinfra import config
+from pyinfra.api import deploy
+from pyinfra.operations import files, systemd
 
 from infraninja.security.common.acl import acl_setup
 
 config.SUDO = True
 
+
 @deploy("Auditd Setup")
 def auditd_setup():
-# Define a set of essential audit rules
+    # Define a set of essential audit rules
     audit_rules = """
     -w /etc/passwd -p wa -k passwd_changes
     -w /etc/shadow -p wa -k shadow_changes
@@ -37,14 +38,12 @@ def auditd_setup():
         present=True,
     )
 
-    # Step 3: Ensure log rotation for auditd logs
     files.put(
         name="Upload auditd logrotate config",
         src="configs/auditd.logrotate",
         dest="/etc/logrotate.d/audit",
     )
 
-    # Step 4: Enable and start auditd
     systemd.service(
         name="Enable and start auditd",
         service="auditd",
@@ -52,7 +51,6 @@ def auditd_setup():
         enabled=True,
     )
 
-    # Step 5: Restart auditd to apply new rules
     systemd.service(
         name="Restart auditd to apply new rules",
         service="auditd",

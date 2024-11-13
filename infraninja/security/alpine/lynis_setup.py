@@ -1,6 +1,6 @@
 from pyinfra import config
 from pyinfra.api import deploy
-from pyinfra.operations import files, server
+from pyinfra.operations import files, openrc, server
 
 from infraninja.security.common.acl import acl_setup
 
@@ -9,7 +9,15 @@ config.SUDO = True
 
 @deploy("Lynis Setup")
 def lynis_setup():
-    # Define custom Lynis configuration settings inline
+    # Ensure cron service is enabled and started
+    openrc.service(
+        name="Enable and start cron service",
+        service="crond",
+        running=True,
+        enabled=True,
+    )
+
+    # Configure Lynis with detailed reporting
     lynis_config_content = """
     # Enable detailed reporting
     audit_report_detail="enabled"
@@ -25,43 +33,44 @@ def lynis_setup():
     verbose_level=2
     """
 
-    # Apply custom Lynis configuration directly
+    # Upload Lynis configuration file with detailed reporting settings
     files.put(
-        name="Upload Lynis configuration for detailed reporting",
+        name="Upload Lynis configuration for detailed reporting on Alpine",
         src=lynis_config_content,
         dest="/etc/lynis/lynis.cfg",
     )
 
-    # Wrapper script content for running a detailed Lynis audit
-    lynis_audit_script = """#!/bin/bash
+    # Create a wrapper script for Lynis audits on Alpine
+    lynis_audit_script = """#!/bin/sh
     lynis audit system --auditor "automated" > /var/log/lynis/lynis-detailed-report.txt
     """
 
-    # Upload the Lynis audit wrapper script to the server
+    # Upload the Lynis audit wrapper script and make it executable
     files.put(
-        name="Upload Lynis audit wrapper script",
+        name="Upload Lynis audit wrapper script for Alpine",
         src=lynis_audit_script,
         dest="/usr/local/bin/run_lynis_audit",
-        mode="755",  # Make it executable
+        mode="755",
     )
 
-    cron_line = (
-        "0 0 * * 7 root /usr/local/bin/run_lynis_audit"  # Weekly on Sundays at midnight
-    )
+    # Set up a cron job to run the Lynis audit script weekly (on Sundays at midnight)
+    cron_line = "0 0 * * 7 /usr/local/bin/run_lynis_audit"
 
-    # Add or ensure the cron job line exists in /etc/crontab
+    # Add or ensure the cron job line exists in /etc/crontabs/root for Alpine
     files.line(
-        name="Add Lynis cron job for weekly audits",
-        path="/etc/crontab",
+        name="Add Lynis cron job for weekly audits in Alpine",
+        path="/etc/crontabs/root",
         line=cron_line,
         present=True,
     )
 
+    # Ensure log directory exists for Lynis
     server.shell(
-        name="Create Lynis log directory",
+        name="Create Lynis log directory for Alpine",
         commands="mkdir -p /var/log/lynis",
     )
 
+    # Configure log rotation for Lynis reports
     logrotate_config = """
     /var/log/lynis/lynis-detailed-report.txt {
         daily
@@ -76,11 +85,12 @@ def lynis_setup():
     }
     """
 
-    # Apply log rotation settings for Lynis reports
+    # Apply log rotation configuration for Lynis reports on Alpine
     files.put(
-        name="Upload Lynis logrotate configuration",
+        name="Upload Lynis logrotate configuration for Alpine",
         src=logrotate_config,
         dest="/etc/logrotate.d/lynis",
     )
 
+    # Call ACL setup
     acl_setup()

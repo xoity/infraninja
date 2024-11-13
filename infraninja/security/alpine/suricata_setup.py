@@ -1,6 +1,6 @@
 from pyinfra import config
 from pyinfra.api import deploy
-from pyinfra.operations import files, server, systemd
+from pyinfra.operations import files, openrc, server
 
 config.SUDO = True
 
@@ -32,7 +32,7 @@ def suricata_setup():
         dest="/etc/suricata/suricata.yaml",
     )
 
-    systemd.service(
+    openrc.service(
         name="Enable and start Suricata",
         service="suricata",
         running=True,
@@ -43,6 +43,7 @@ def suricata_setup():
         name="Create Suricata log directory",
         commands="mkdir -p /var/log/suricata",
     )
+
 
     logrotate_config = """
     /var/log/suricata/eve.json {

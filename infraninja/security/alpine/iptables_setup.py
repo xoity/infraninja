@@ -1,12 +1,12 @@
 from pyinfra import config
 from pyinfra.api import deploy
-from pyinfra.operations import files, server, systemd
+from pyinfra.operations import files, openrc, server
 
 config.SUDO = True
 
 
-@deploy("iptables Setup")
-def iptabels_setup():
+@deploy("iptables Setup for Alpine Linux")
+def iptables_setup_alpine():
     # Define a basic set of iptables rules for security
     iptables_rules = """
     # Flush existing rules
@@ -40,28 +40,38 @@ def iptabels_setup():
 
     # Upload and apply iptables configuration script
     files.put(
-        name="Upload iptables rules script",
+        name="Upload iptables rules script for Alpine",
         src=iptables_rules,
         dest="/usr/local/bin/setup_iptables.sh",
         mode="755",  # Make the script executable
     )
 
+    # Run the iptables configuration script to apply the rules
     server.shell(
-        name="Run iptables setup script",
+        name="Run iptables setup script on Alpine",
         commands="/usr/local/bin/setup_iptables.sh",
     )
 
-    systemd.service(
-        name="Enable iptables-persistent to restore rules on reboot",
-        service="netfilter-persistent",
+    # Set up iptables persistence on Alpine
+    server.shell(
+        name="Ensure iptables rules persist on reboot",
+        commands="iptables-save > /etc/iptables/rules.v4 && rc-update add iptables",
+    )
+
+    # Ensure the iptables service starts on boot and is running
+    openrc.service(
+        name="Start iptables service on Alpine",
+        service="iptables",
         running=True,
         enabled=True,
     )
 
     server.shell(
-        name="Create iptables log directory",
+        name="Create iptables log directory for Alpine",
         commands="mkdir -p /var/log/iptables",
     )
+
+    # Configure log rotation for iptables logs
 
     logrotate_config = """
     /var/log/iptables/iptables.log {
@@ -72,14 +82,14 @@ def iptabels_setup():
         missingok
         notifempty
         postrotate
-            /etc/init.d/iptables reload > /dev/null 2>&1 || true
+            rc-service iptables reload > /dev/null 2>&1 || true
         endscript
     }
     """
 
-    # Apply log rotation settings for iptables logs
+    # Apply log rotation settings for iptables logs on Alpine
     files.put(
-        name="Upload iptables logrotate configuration",
+        name="Upload iptables logrotate configuration for Alpine",
         src=logrotate_config,
         dest="/etc/logrotate.d/iptables",
     )

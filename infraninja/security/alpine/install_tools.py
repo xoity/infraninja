@@ -1,6 +1,6 @@
 from pyinfra import config, host
 from pyinfra.api import deploy
-from pyinfra.operations import apt
+from pyinfra.operations import apk
 
 config.SUDO = True
 
@@ -17,7 +17,7 @@ DEFAULTS = {
         },
         "auditd": {
             "install": True,
-            "packages": ["auditd"],
+            "packages": ["audit"],
         },
         "clamav": {
             "install": True,
@@ -35,13 +35,17 @@ DEFAULTS = {
             "install": True,
             "packages": ["suricata"],
         },
+        "unattended-upgrades": {
+            "install": True,
+            "packages": ["unattended-upgrades"],
+        },
         "acl": {
             "install": True,
             "packages": ["acl"],
         },
-        "cron": {
+        "cronie": {
             "install": True,
-            "packages": ["cron"],
+            "packages": ["cronie"],
         },
     }
 }
@@ -55,9 +59,9 @@ def install_security_tools():
         if tool_data["install"]:
             # Check if the primary package is already installed
             primary_package = tool_data["packages"][0]
-            if not host.fact.deb.is_installed(primary_package):
+            if not host.fact.apk.is_installed(primary_package):
                 # Install the specified packages for this tool
-                apt.packages(
+                apk.packages(
                     name=f"Install {tool} and related packages",
                     packages=tool_data["packages"],
                 )

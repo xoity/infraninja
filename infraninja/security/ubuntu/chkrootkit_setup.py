@@ -1,8 +1,9 @@
+from pyinfra import config
 from pyinfra.api import deploy
 from pyinfra.operations import files, server
-from pyinfra import config
 
 config.SUDO = True
+
 
 @deploy("chkrootkit Setup")
 def chkrootkit_setup():
@@ -18,9 +19,9 @@ def chkrootkit_setup():
         mode="755",  # Make the script executable
     )
 
-    # Step 3: Schedule the chkrootkit scan with a cron job
-
-    cron_line = "0 2 * * 0 root /usr/local/bin/run_chkrootkit_scan"  # Weekly on Sundays at 2 AM
+    cron_line = (
+        "0 2 * * 0 root /usr/local/bin/run_chkrootkit_scan"  # Weekly on Sundays at 2 AM
+    )
 
     # Add or ensure the cron job line exists in /etc/crontab
     files.line(
@@ -30,13 +31,10 @@ def chkrootkit_setup():
         present=True,
     )
 
-    # Step 4: Ensure log directory for chkrootkit exists
     server.shell(
         name="Create chkrootkit log directory",
         commands="mkdir -p /var/log/chkrootkit",
     )
-
-    # Step 5: Configure log rotation for chkrootkit logs
 
     logrotate_config = """
     /var/log/chkrootkit/*.log {

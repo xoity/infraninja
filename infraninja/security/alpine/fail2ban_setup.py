@@ -1,14 +1,14 @@
 from pyinfra import config
 from pyinfra.api import deploy
-from pyinfra.operations import files, systemd
+from pyinfra.operations import files, openrc
 
 from infraninja.security.common.acl import acl_setup
 
 config.SUDO = True
 
 
-@deploy("Fail2Ban Setup")
-def fail2ban_setup():
+@deploy("Fail2Ban Setup for Alpine Linux")
+def fail2ban_setup_alpine():
     # Configure Fail2Ban settings in /etc/fail2ban/jail.local
     files.file(
         name="Create jail.local if it doesn't exist",
@@ -91,9 +91,8 @@ def fail2ban_setup():
         replace="logpath =.*",
         append=True,
     )
-
-    # Enable and start the Fail2Ban service
-    systemd.service(
+    # Enable and start Fail2Ban service using OpenRC on Alpine
+    openrc.service(
         name="Enable and start Fail2Ban",
         service="fail2ban",
         running=True,
@@ -101,10 +100,11 @@ def fail2ban_setup():
     )
 
     # Restart Fail2Ban to apply new settings
-    systemd.service(
+    openrc.service(
         name="Restart Fail2Ban to apply changes",
         service="fail2ban",
         restarted=True,
     )
 
+    # Setup ACLs (from your existing acl_setup function)
     acl_setup()
