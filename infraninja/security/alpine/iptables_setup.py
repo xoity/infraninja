@@ -7,7 +7,7 @@ config.SUDO = True
 
 @deploy("iptables Setup for Alpine Linux")
 def iptables_setup_alpine():
-    # Define a basic set of iptables rules for security
+    # Define iptables rules as a string
     iptables_rules = """
     # Flush existing rules
     iptables -F
@@ -38,10 +38,15 @@ def iptables_setup_alpine():
     iptables-save > /etc/iptables/rules.v4
     """
 
+    # Path for temporary local iptables rules file
+    iptables_rules_path = "/tmp/setup_iptables.sh"
+    with open(iptables_rules_path, "w") as f:
+        f.write(iptables_rules)
+
     # Upload and apply iptables configuration script
     files.put(
         name="Upload iptables rules script for Alpine",
-        src=iptables_rules,
+        src=iptables_rules_path,
         dest="/usr/local/bin/setup_iptables.sh",
         mode="755",  # Make the script executable
     )
@@ -66,13 +71,13 @@ def iptables_setup_alpine():
         enabled=True,
     )
 
+    # Create a log directory for iptables
     server.shell(
         name="Create iptables log directory for Alpine",
         commands="mkdir -p /var/log/iptables",
     )
 
-    # Configure log rotation for iptables logs
-
+    # Log rotation configuration content for iptables
     logrotate_config = """
     /var/log/iptables/iptables.log {
         daily
@@ -87,9 +92,15 @@ def iptables_setup_alpine():
     }
     """
 
+    # Path for temporary local logrotate configuration file
+    logrotate_config_path = "/tmp/iptables_logrotate.conf"
+    with open(logrotate_config_path, "w") as f:
+        f.write(logrotate_config)
+
     # Apply log rotation settings for iptables logs on Alpine
     files.put(
         name="Upload iptables logrotate configuration for Alpine",
-        src=logrotate_config,
+        src=logrotate_config_path,
         dest="/etc/logrotate.d/iptables",
     )
+

@@ -4,10 +4,9 @@ from pyinfra.operations import files, openrc, server
 
 config.SUDO = True
 
-
 @deploy("Suricata Setup")
 def suricata_setup():
-    # Custom Suricata configuration
+    # Custom Suricata configuration content
     suricata_config = """
     # Basic logging setup for Suricata to monitor all network traffic with high verbosity
     outputs:
@@ -25,13 +24,24 @@ def suricata_setup():
                 tls: yes                 # log TLS events
     """
 
-    # Upload the custom Suricata configuration file
+    # Write Suricata config to /tmp/suricata.yaml
+    suricata_config_path = "/tmp/suricata.yaml"
+    with open(suricata_config_path, "w") as f:
+        f.write(suricata_config)
+
     files.put(
         name="Upload custom Suricata configuration",
-        src=suricata_config,
+        src=suricata_config_path,
         dest="/etc/suricata/suricata.yaml",
     )
 
+    # Ensure the Suricata log directory exists
+    server.shell(
+        name="Create Suricata log directory",
+        commands="mkdir -p /var/log/suricata",
+    )
+
+    # Enable and start Suricata service
     openrc.service(
         name="Enable and start Suricata",
         service="suricata",
@@ -39,12 +49,7 @@ def suricata_setup():
         enabled=True,
     )
 
-    server.shell(
-        name="Create Suricata log directory",
-        commands="mkdir -p /var/log/suricata",
-    )
-
-
+    # Log rotation configuration content for Suricata
     logrotate_config = """
     /var/log/suricata/eve.json {
         daily
@@ -59,9 +64,13 @@ def suricata_setup():
     }
     """
 
-    # Upload log rotation configuration for Suricata logs
+    # Write log rotation config to /tmp/suricata_logrotate.conf
+    logrotate_config_path = "/tmp/suricata_logrotate.conf"
+    with open(logrotate_config_path, "w") as f:
+        f.write(logrotate_config)
+
     files.put(
         name="Upload Suricata logrotate configuration",
-        src=logrotate_config,
+        src=logrotate_config_path,
         dest="/etc/logrotate.d/suricata",
     )

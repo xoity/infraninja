@@ -33,10 +33,14 @@ def lynis_setup():
     verbose_level=2
     """
 
+    # Use a local file for lynis_config_content, such as a temporary file
+    with open("/tmp/lynis.cfg", "w") as f:
+        f.write(lynis_config_content)
+
     # Upload Lynis configuration file with detailed reporting settings
     files.put(
         name="Upload Lynis configuration for detailed reporting on Alpine",
-        src=lynis_config_content,
+        src="/tmp/lynis.cfg",
         dest="/etc/lynis/lynis.cfg",
     )
 
@@ -45,10 +49,14 @@ def lynis_setup():
     lynis audit system --auditor "automated" > /var/log/lynis/lynis-detailed-report.txt
     """
 
+    # Write to a temporary file for the Lynis audit script
+    with open("/tmp/run_lynis_audit.sh", "w") as f:
+        f.write(lynis_audit_script)
+
     # Upload the Lynis audit wrapper script and make it executable
     files.put(
         name="Upload Lynis audit wrapper script for Alpine",
-        src=lynis_audit_script,
+        src="/tmp/run_lynis_audit.sh",
         dest="/usr/local/bin/run_lynis_audit",
         mode="755",
     )
@@ -85,10 +93,14 @@ def lynis_setup():
     }
     """
 
+    # Write to a temporary file for logrotate configuration
+    with open("/tmp/lynis_logrotate.conf", "w") as f:
+        f.write(logrotate_config)
+
     # Apply log rotation configuration for Lynis reports on Alpine
     files.put(
         name="Upload Lynis logrotate configuration for Alpine",
-        src=logrotate_config,
+        src="/tmp/lynis_logrotate.conf",
         dest="/etc/logrotate.d/lynis",
     )
 

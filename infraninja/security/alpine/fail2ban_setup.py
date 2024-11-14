@@ -73,7 +73,6 @@ def fail2ban_setup_alpine():
         path="/etc/fail2ban/jail.local",
         line="enabled = true",
         replace="enabled =.*",
-        append=True,
     )
 
     files.line(
@@ -81,7 +80,6 @@ def fail2ban_setup_alpine():
         path="/etc/fail2ban/jail.local",
         line="port = ssh",
         replace="port =.*",
-        append=True,
     )
 
     files.line(
@@ -89,7 +87,6 @@ def fail2ban_setup_alpine():
         path="/etc/fail2ban/jail.local",
         line="logpath = %(sshd_log)s",
         replace="logpath =.*",
-        append=True,
     )
     # Enable and start Fail2Ban service using OpenRC on Alpine
     openrc.service(

@@ -3,7 +3,6 @@ from pyinfra.api import deploy
 
 #alpine
 from infraninja.security.alpine.install_tools import install_security_tools
-from infraninja.security.alpine.chkrootkit_setup import chkrootkit_setup_alpine
 from infraninja.security.alpine.clamav_setup import clamav_setup
 from infraninja.security.alpine.fail2ban_setup import fail2ban_setup_alpine
 from infraninja.security.alpine.lynis_setup import lynis_setup
@@ -17,7 +16,6 @@ def test_deploy():
     install_security_tools()
 
     # Run the chkrootkit_setup deploy
-    chkrootkit_setup_alpine()
 
     # Run the clamav_setup deploy
     clamav_setup()

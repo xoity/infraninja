@@ -1,6 +1,6 @@
-from pyinfra import config
 from pyinfra.api import deploy
 from pyinfra.operations import files, server
+from pyinfra import config
 
 config.SUDO = True
 
