@@ -28,18 +28,11 @@ DEFAULTS = {
             "install": True,
             "packages": ["lynis"],
         },
-        "chkrootkit": {
-            "install": True,
-            "packages": ["chkrootkit"],
-        },
         "suricata": {
             "install": True,
             "packages": ["suricata"],
         },
-        "unattended-upgrades": {
-            "install": True,
-            "packages": ["unattended-upgrades"],
-        },
+
         "acl": {
             "install": True,
             "packages": ["acl"],
