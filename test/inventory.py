@@ -8,5 +8,5 @@ NOTE: THE HOST CONFIGURATIONS ARE DEFINED IN THIS FILE, AND MUST BE IN TUPLES, A
 
 # defined the hosts variable as a list of tuples
 hosts = [
-    ("10.255.254.87", {"ssh_user": "vagrant", "ssh_key": "~/.ssh/id_rsa"}), # ubuntu key
+    ("10.1.10.134", {"ssh_user": "vagrant", "ssh_key": "~/.ssh/id_rsa"}), # ubuntu key
 ]
