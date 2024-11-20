@@ -4,7 +4,6 @@ from pyinfra.operations import files, openrc, server
 
 config.SUDO = True
 
-
 @deploy("iptables Setup for Alpine Linux")
 def iptables_setup_alpine():
     # Define iptables rules as a string
@@ -57,10 +56,10 @@ def iptables_setup_alpine():
         commands="/usr/local/bin/setup_iptables.sh",
     )
 
-    # Set up iptables persistence on Alpine
+    # Save iptables rules explicitly before trying to start the service
     server.shell(
-        name="Ensure iptables rules persist on reboot",
-        commands="iptables-save > /etc/iptables/rules.v4 && rc-update add iptables",
+        name="Save iptables rules and enable persistence",
+        commands="iptables-save > /etc/iptables/rules.v4 && /etc/init.d/iptables save",
     )
 
     # Ensure the iptables service starts on boot and is running
@@ -103,4 +102,3 @@ def iptables_setup_alpine():
         src=logrotate_config_path,
         dest="/etc/logrotate.d/iptables",
     )
-

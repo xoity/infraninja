@@ -45,4 +45,3 @@ action = %(action_mwl)s
         enabled=True,
     )
 
-    acl_setup()

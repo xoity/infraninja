@@ -105,4 +105,3 @@ def lynis_setup():
     )
 
     # Call ACL setup
-    acl_setup()
