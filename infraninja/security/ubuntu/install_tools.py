@@ -1,6 +1,7 @@
 from pyinfra import config, host
 from pyinfra.api import deploy
 from pyinfra.operations import apt
+from pyinfra.facts.apt import AptPackages
 
 config.SUDO = True
 
@@ -55,7 +56,12 @@ def install_security_tools():
         if tool_data["install"]:
             # Check if the primary package is already installed
             primary_package = tool_data["packages"][0]
-            if not host.fact.deb.is_installed(primary_package):
+            
+            # Get installed packages fact
+            installed_packages = host.get_fact(AptPackages)
+            
+            # Check if package is installed
+            if primary_package not in installed_packages:
                 # Install the specified packages for this tool
                 apt.packages(
                     name=f"Install {tool} and related packages",
