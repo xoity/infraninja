@@ -19,34 +19,30 @@ destemail = root@localhost
 sender = fail2ban@localhost
 action = %(action_mwl)s
     """
+    fail2ban_config_path = "/tmp/jail.local"
+    with open(fail2ban_config_path, "w") as f:
+        f.write(fail2ban_config_content)
 
-    # Path to temporary file
-    tmp_config_path = "/tmp/jail.local"
-    final_config_path = "/etc/fail2ban/jail.local"
-
-    # Write the configuration to a temporary file
-    server.shell(
-        name="Write Fail2Ban configuration to a temporary file",
-        commands=[
-            f"echo '{fail2ban_config_content.strip()}' > {tmp_config_path}",
-            f"chmod 644 {tmp_config_path}",  # Ensure appropriate permissions
-        ],
-    )
-
-    # Use files.put to copy the temporary file to the final location
+    # Upload Fail2Ban configuration file
     files.put(
-        name="Copy Fail2Ban configuration to /etc/fail2ban/jail.local",
-        src=tmp_config_path,
-        dest=final_config_path,
-        mode="644",
+        name="Upload Fail2Ban configuration for Alpine",
+        src=fail2ban_config_path,
+        dest="/etc/fail2ban/jail.local",
     )
 
-    # Restart the Fail2Ban service
+    # Ensure the Fail2Ban log directory exists
+    server.shell(
+        name="Create Fail2Ban log directory",
+        commands="mkdir -p /var/log/fail2ban",
+    )
+
+    # Enable and start Fail2Ban service
+
     openrc.service(
-        name="Restart Fail2Ban service",
+        name="Enable and start Fail2Ban",
         service="fail2ban",
-        restarted=True,
+        running=True,
+        enabled=True,
     )
 
-    # Setup ACLs
     acl_setup()
