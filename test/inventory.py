@@ -33,12 +33,15 @@ def fetch_servers(access_key):
         ]
     except requests.exceptions.RequestException as e:
         print("An error occurred while making the request:", e)
+        print("No hosts will be fetched.")
         return []
     except KeyError as e:
         print("Error parsing response:", e)
+        print("No hosts will be fetched.")
         return []
     except Exception as e:
         print("An unexpected error occurred:", e)
+        print("No hosts will be fetched.")
         return []
 
 # Example usage
