@@ -1,22 +1,27 @@
 import pyinfra
 from pyinfra.api import deploy
-
-#alpine
-from infraninja.security.ubuntu.install_tools import install_security_tools
-from infraninja.security.ubuntu.media_encryption import media_encryption_setup
-
+from infraninja.security.common.update_packages import system_update
+from inventory import fetch_servers
 
 @deploy('Test Security Setup')
 def test_deploy():
+    system_update()
 
-    install_security_tools()
+def main():
+    access_key = input("Enter your access key: ")
+    hosts = fetch_servers(access_key)
+    if not hosts:
+        print("No valid hosts found.")
+        return
 
-    media_encryption_setup()
+    # Execute the deploy on the fetched VMs
+    pyinfra.api.deploy(
+        test_deploy(),
+        hosts=hosts
+    )
 
-# Execute the deploy on the VMs
-pyinfra.api.deploy(
-    test_deploy(),
-)
+if __name__ == "__main__":
+    main()
 
 
 
