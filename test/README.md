@@ -156,7 +156,7 @@ To execute the test deployment defined in `test_deploy.py`:
 1. **Ensure Environment Variables Are Set**: Make sure both `ACCESS_KEY` and `INVENTORY_URL` environment variables are properly configured.
 2. **Run the Script**:
    ```bash
-   python test_deploy.py
+   pyinfra inventory.py test_deploy.py
    ```
 3. **Expected Behavior**:
    - The script fetches server details from an API.
@@ -193,7 +193,7 @@ To run additional deployment tasks, you can import modules from `infraninja` or 
 
 3. **Execute the Script**:
    ```bash
-   python test_deploy.py
+   pyinfra inventory.py test_deploy.py
    ```
 
 ---
