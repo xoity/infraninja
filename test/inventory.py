@@ -1,10 +1,8 @@
-import os
 import requests
 
 
 # defined the hosts variable as a list of tuples
 def fetch_servers(access_key):
-    url = os.getenv("INVENTORY_URL")
     headers = {"Authentication": access_key}
     try:
         response = requests.get(url, headers=headers)
@@ -41,5 +39,6 @@ def fetch_servers(access_key):
 
 
 # Example usage
-access_key = os.getenv("ACCESS_KEY")  # Read the access key from environment variable
+access_key = input("Please enter your access key: ")
+url = input("Please enter the URL: ")
 hosts = fetch_servers(access_key)
