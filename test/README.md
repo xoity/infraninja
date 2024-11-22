@@ -52,102 +52,6 @@ This project contains configuration and deployment scripts for managing virtual 
      vagrant ssh alpine
      ```
 
----
-
-## Setting Up Environment Variables
-
-### 1. Setting the `ACCESS_KEY`
-
-The `inventory.py` script requires an access key to authenticate with an API and fetch server details dynamically. Follow these steps to set the `ACCESS_KEY` environment variable:
-
-#### **How to Set the Access Key**:
-- **Linux/macOS**:
-  ```bash
-  export ACCESS_KEY="your_access_key_here"
-  ```
-- **Windows (Command Prompt)**:
-  ```cmd
-  set ACCESS_KEY=your_access_key_here
-  ```
-- **Windows (PowerShell)**:
-  ```powershell
-  $env:ACCESS_KEY="your_access_key_here"
-  ```
-
-#### **Verify the Variable**:
-- **Linux/macOS**:
-  ```bash
-  echo $ACCESS_KEY
-  ```
-- **Windows (Command Prompt)**:
-  ```cmd
-  echo %ACCESS_KEY%
-  ```
-- **Windows (PowerShell)**:
-  ```powershell
-  $env:ACCESS_KEY
-  ```
-
----
-
-### 2. Setting the `INVENTORY_URL`
-
-If you need to use a custom API endpoint to fetch server details, you can set the `INVENTORY_URL` environment variable. This allows flexibility in pointing the inventory script to a different URL.
-
-#### **How to Set the Inventory URL**:
-- **Linux/macOS**:
-  ```bash
-  export INVENTORY_URL="https://custom-api-url.com/inventory/getServers/"
-  ```
-- **Windows (Command Prompt)**:
-  ```cmd
-  set INVENTORY_URL=https://custom-api-url.com/inventory/getServers/
-  ```
-- **Windows (PowerShell)**:
-  ```powershell
-  $env:INVENTORY_URL="https://custom-api-url.com/inventory/getServers/"
-  ```
-
-#### **Verify the Variable**:
-- **Linux/macOS**:
-  ```bash
-  echo $INVENTORY_URL
-  ```
-- **Windows (Command Prompt)**:
-  ```cmd
-  echo %INVENTORY_URL%
-  ```
-- **Windows (PowerShell)**:
-  ```powershell
-  $env:INVENTORY_URL
-  ```
-
----
-
-### Using Both Variables Together
-
-Ensure both `ACCESS_KEY` and `INVENTORY_URL` are set correctly before running the deployment scripts. If either variable is missing, the `inventory.py` script will fail to fetch server details from the API.
-
-1. Example on Linux/macOS:
-   ```bash
-   export ACCESS_KEY="your_access_key_here"
-   export INVENTORY_URL="https://custom-api-url.com/inventory/getServers/"
-   ```
-
-2. Example on Windows (Command Prompt):
-   ```cmd
-   set ACCESS_KEY=your_access_key_here
-   set INVENTORY_URL=https://custom-api-url.com/inventory/getServers/
-   ```
-
-3. Example on Windows (PowerShell):
-   ```powershell
-   $env:ACCESS_KEY="your_access_key_here"
-   $env:INVENTORY_URL="https://custom-api-url.com/inventory/getServers/"
-   ```
-
----
-
 ## Running the Deployment
 
 ### Test Deployment with Pyinfra
@@ -186,7 +90,7 @@ To run additional deployment tasks, you can import modules from `infraninja` or 
 
    @deploy("Install NGINX")
    def nginx_deploy():
-       install_nginx()
+       install_nginx() # you may add "_sudo = True" if you need this to run with root
 
    nginx_deploy()
    ```
