@@ -1,9 +1,7 @@
-from pyinfra import config, host
+from pyinfra import host
 from pyinfra.api import deploy
 from pyinfra.operations import apk
 from pyinfra.facts.apk import ApkPackages
-
-config.SUDO = True
 
 # Define defaults for each security tool and related packages
 DEFAULTS = {
@@ -32,7 +30,6 @@ DEFAULTS = {
             "install": True,
             "packages": ["suricata"],
         },
-
         "acl": {
             "install": True,
             "packages": ["acl"],
@@ -45,7 +42,6 @@ DEFAULTS = {
 }
 
 
-
 @deploy("Install Security Tools", data_defaults=DEFAULTS)
 def install_security_tools():
     # Loop over each tool in the host data
@@ -54,10 +50,10 @@ def install_security_tools():
         if tool_data["install"]:
             # Check if the primary package is already installed
             primary_package = tool_data["packages"][0]
-            
+
             # Get installed packages fact
             installed_packages = host.get_fact(ApkPackages)
-            
+
             # Check if package is installed
             if primary_package not in installed_packages:
                 # Install the specified packages for this tool

@@ -1,9 +1,7 @@
-from pyinfra import config, host
+from pyinfra import host
 from pyinfra.api import deploy
 from pyinfra.operations import apt
 from pyinfra.facts.apt import AptSources
-
-config.SUDO = True
 
 # Define defaults for each security tool and related packages
 DEFAULTS = {
@@ -60,10 +58,10 @@ def install_security_tools():
         if tool_data["install"]:
             # Check if the primary package is already installed
             primary_package = tool_data["packages"][0]
-            
+
             # Get installed packages fact
             installed_packages = host.get_fact(AptSources)
-            
+
             # Check if package is installed
             if primary_package not in installed_packages:
                 # Install the specified packages for this tool

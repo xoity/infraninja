@@ -1,9 +1,5 @@
-from pyinfra import config
 from pyinfra.api import deploy
 from pyinfra.operations import files, openrc, server
-
-
-config.SUDO = True
 
 
 @deploy("Fix and configure Fail2Ban on Alpine Linux")
@@ -41,4 +37,3 @@ def fail2ban_setup_alpine():
         running=True,
         enabled=True,
     )
-

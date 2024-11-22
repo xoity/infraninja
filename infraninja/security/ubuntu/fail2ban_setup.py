@@ -1,8 +1,5 @@
-from pyinfra import config
 from pyinfra.api import deploy
 from pyinfra.operations import files, systemd
-
-config.SUDO = True
 
 
 @deploy("Fail2Ban Setup")
@@ -46,4 +43,3 @@ def fail2ban_setup():
         service="fail2ban",
         restarted=True,
     )
-

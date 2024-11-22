@@ -1,11 +1,10 @@
-from pyinfra import config, host
+from pyinfra import host
 from pyinfra.api import deploy
 from pyinfra.facts.server import LinuxName, OpenRCStatus, SystemdStatus
 from pyinfra.operations import openrc, systemd
 
 # Get the OS type
 os = host.get_fact(LinuxName)
-config.SUDO = True
 
 # List of services to disable if present
 common_services = ["avahi-daemon", "cups", "bluetooth", "rpcbind", "vsftpd", "telnet"]

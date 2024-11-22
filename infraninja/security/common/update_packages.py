@@ -1,10 +1,9 @@
-from pyinfra import config, host
+from pyinfra import host
 from pyinfra.api import deploy
 from pyinfra.facts.server import LinuxName
 from pyinfra.operations import apk, apt
 
 os = host.get_fact(LinuxName)
-config.SUDO = True
 
 
 @deploy("Common System Updates")

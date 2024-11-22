@@ -1,8 +1,6 @@
 from pyinfra.api import deploy
 from pyinfra.operations import server, systemd
-from pyinfra import config
 
-config.SUDO = True
 
 @deploy("ClamAV Setup")
 def clamav_setup():

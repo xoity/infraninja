@@ -1,8 +1,6 @@
-from pyinfra import config
 from pyinfra.api import deploy
 from pyinfra.operations import server
 
-config.SUDO = True
 
 @deploy("Set ACL")
 def acl_setup():

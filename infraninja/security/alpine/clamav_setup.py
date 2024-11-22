@@ -1,8 +1,5 @@
-from pyinfra import config
 from pyinfra.api import deploy
 from pyinfra.operations import server, openrc
-
-config.SUDO = True
 
 
 @deploy("ClamAV Setup")

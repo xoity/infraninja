@@ -1,9 +1,5 @@
-from pyinfra import config
 from pyinfra.api import deploy
 from pyinfra.operations import files, systemd
-
-
-config.SUDO = True
 
 
 @deploy("Auditd Setup")

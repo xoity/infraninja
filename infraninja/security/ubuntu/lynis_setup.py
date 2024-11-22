@@ -1,9 +1,5 @@
-from pyinfra import config
 from pyinfra.api import deploy
 from pyinfra.operations import files, server
-
-
-config.SUDO = True
 
 
 @deploy("Lynis Setup")
@@ -90,4 +86,3 @@ def lynis_setup():
         src=logrotate_config_path,
         dest="/etc/logrotate.d/lynis",
     )
-

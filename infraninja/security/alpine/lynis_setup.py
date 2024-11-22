@@ -1,10 +1,5 @@
-from pyinfra import config
 from pyinfra.api import deploy
 from pyinfra.operations import files, openrc, server
-
-from infraninja.security.common.acl import acl_setup
-
-config.SUDO = True
 
 
 @deploy("Lynis Setup")

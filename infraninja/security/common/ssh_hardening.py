@@ -1,8 +1,7 @@
-from pyinfra import config, host
+from pyinfra import host
 from pyinfra.api import deploy
 from pyinfra.operations import files, systemd, openrc
 
-config.SUDO = True
 
 ssh_config = {
     "PermitRootLogin": "prohibit-password",

@@ -1,8 +1,5 @@
-from pyinfra import config
 from pyinfra.api import deploy
 from pyinfra.operations import files, server, systemd
-
-config.SUDO = True
 
 
 @deploy("Suricata Setup")

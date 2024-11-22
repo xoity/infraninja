@@ -1,8 +1,6 @@
 from pyinfra.operations import files, server
 import os
-from pyinfra import config
 
-config.SUDO = True
 
 blacklist_usb_modules = [
     "usb_storage",  # Disable USB storage driver

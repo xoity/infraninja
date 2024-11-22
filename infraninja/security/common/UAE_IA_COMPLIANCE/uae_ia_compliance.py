@@ -1,8 +1,5 @@
-from pyinfra import config
 from pyinfra.api import deploy
 from pyinfra.operations import server
-
-config.SUDO = True
 
 
 @deploy("T3.6.3: Log privileged operations and unauthorized access attempts")

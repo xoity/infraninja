@@ -1,8 +1,6 @@
-from pyinfra import config
 from pyinfra.api import deploy
 from pyinfra.operations import files, openrc, server
 
-config.SUDO = True
 
 @deploy("Suricata Setup")
 def suricata_setup():
