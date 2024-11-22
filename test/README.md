@@ -63,6 +63,8 @@ To execute the test deployment defined in `test_deploy.py`:
    pyinfra inventory.py test_deploy.py
    ```
 3. **Expected Behavior**:
+   
+   - Takes in your input for the API key and the URL
    - The script fetches server details from an API.
    - It performs an update of packages on the retrieved servers.
 
