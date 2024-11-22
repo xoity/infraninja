@@ -10,7 +10,7 @@ This project contains configuration and deployment scripts for managing virtual 
 - **Purpose**: Defines the configuration for two virtual machines (VMs) managed by Vagrant.
   - **Ubuntu VM**: 1024 MB of memory and 2 CPU cores.
   - **Alpine VM**: 512 MB of memory and 1 CPU core.
-- **Usage**: Sets up the VMs locally for testing deployment scripts.
+- **Usage**: If you choose to test on VMs running on VBox, VMWare etc.. then this sets up the VMs locally for testing deployment scripts.
 
 ### `test_deploy.py`
 - **Purpose**: Executes deployment tasks using Pyinfra, a lightweight server management tool.
@@ -20,7 +20,7 @@ This project contains configuration and deployment scripts for managing virtual 
 ### `inventory.py`
 - **Purpose**: Fetches server details from the Jinn API dynamically based on the user's access key.
   - Returns a list of servers with their IP addresses, SSH users, and SSH keys.
-- **Details**: Uses an environment variable (`ACCESS_KEY`) for secure access to the API.
+- **Details**: Uses an environment variable (`ACCESS_KEY`) for secure access to an API (prefered method of fetching hosts).
   - Fetched server details are formatted for use in Pyinfra.
 
 ---
