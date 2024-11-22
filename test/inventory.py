@@ -1,7 +1,7 @@
 import os
 import requests
 
-# Define the hosts variable as a list of tuples
+# defined the hosts variable as a list of tuples
 def fetch_servers(access_key):
     url = "https://jinn-beta.kalvad.cloud/inventory/getServers/"
     headers = {
@@ -12,7 +12,16 @@ def fetch_servers(access_key):
         response.raise_for_status()
         data = response.json()
         return [
-            (server["ip"], {"ssh_user": server["ssh_user"], "ssh_key": server["ssh_key"]})
+            (
+                server["ssh_hostname"],
+                {
+                    **server.get("attributes", {}),
+                    "ssh_user": server.get("ssh_user"),
+                    "is_active": server.get("is_active", False),
+                    "install_postgres": server.get("attributes", {}).get("docker", "False") == "True",
+                    "group_name": server.get("group", {}).get("name_en"),
+                },
+            )
             for server in data.get("result", [])
         ]
     except requests.exceptions.RequestException as e:
@@ -30,7 +39,4 @@ def fetch_servers(access_key):
 
 # Example usage
 access_key = os.getenv("ACCESS_KEY")  # Read the access key from environment variable
-if not access_key:
-    print("ACCESS_KEY environment variable is not set.")
-else:
-    hosts = fetch_servers(access_key)
+hosts = fetch_servers(access_key)
