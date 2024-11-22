@@ -8,15 +8,14 @@ config.SUDO = True
 
 @deploy("Fix and configure Fail2Ban on Alpine Linux")
 def fail2ban_setup_alpine():
-    # Define Fail2Ban configuration as a string
     fail2ban_config_content = """
-[DEFAULT]
-bantime = 3600
-findtime = 600
-maxretry = 5
-destemail = root@localhost
-sender = fail2ban@localhost
-action = %(action_mwl)s
+    [DEFAULT]
+    bantime = 3600
+    findtime = 600
+    maxretry = 5
+    destemail = root@localhost
+    sender = fail2ban@localhost
+    action = %(action_mwl)s
     """
     fail2ban_config_path = "/tmp/jail.local"
     with open(fail2ban_config_path, "w") as f:
@@ -36,7 +35,6 @@ action = %(action_mwl)s
     )
 
     # Enable and start Fail2Ban service
-
     openrc.service(
         name="Enable and start Fail2Ban",
         service="fail2ban",

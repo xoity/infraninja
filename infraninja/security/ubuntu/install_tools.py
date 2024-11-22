@@ -1,7 +1,7 @@
 from pyinfra import config, host
 from pyinfra.api import deploy
 from pyinfra.operations import apt
-from pyinfra.facts.apt import AptPackages
+from pyinfra.facts.apt import AptSources
 
 config.SUDO = True
 
@@ -44,6 +44,10 @@ DEFAULTS = {
             "install": True,
             "packages": ["cron"],
         },
+        "iptables": {
+            "install": True,
+            "packages": ["iptables", "iptables-persistent", "netfilter-persistent"],
+        },
     }
 }
 
@@ -58,7 +62,7 @@ def install_security_tools():
             primary_package = tool_data["packages"][0]
             
             # Get installed packages fact
-            installed_packages = host.get_fact(AptPackages)
+            installed_packages = host.get_fact(AptSources)
             
             # Check if package is installed
             if primary_package not in installed_packages:

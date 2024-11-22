@@ -2,7 +2,6 @@ from pyinfra import config
 from pyinfra.api import deploy
 from pyinfra.operations import files, server
 
-from infraninja.security.common.acl import acl_setup
 
 config.SUDO = True
 
@@ -24,11 +23,14 @@ def lynis_setup():
     # Set verbose level to provide detailed client reports
     verbose_level=2
     """
+    lynis_config_path = "/tmp/lynis.cfg"
+    with open(lynis_config_path, "w") as f:
+        f.write(lynis_config_content)
 
     # Apply custom Lynis configuration directly
     files.put(
         name="Upload Lynis configuration for detailed reporting",
-        src=lynis_config_content,
+        src=lynis_config_path,
         dest="/etc/lynis/lynis.cfg",
     )
 
@@ -36,11 +38,14 @@ def lynis_setup():
     lynis_audit_script = """#!/bin/bash
     lynis audit system --auditor "automated" > /var/log/lynis/lynis-detailed-report.txt
     """
+    lynis_audit_script_path = "/tmp/run_lynis_audit.sh"
+    with open(lynis_audit_script_path, "w") as f:
+        f.write(lynis_audit_script)
 
     # Upload the Lynis audit wrapper script to the server
     files.put(
         name="Upload Lynis audit wrapper script",
-        src=lynis_audit_script,
+        src=lynis_audit_script_path,
         dest="/usr/local/bin/run_lynis_audit",
         mode="755",  # Make it executable
     )
@@ -75,12 +80,14 @@ def lynis_setup():
         endscript
     }
     """
+    logrotate_config_path = "/tmp/lynis_logrotate"
+    with open(logrotate_config_path, "w") as f:
+        f.write(logrotate_config)
 
     # Apply log rotation settings for Lynis reports
     files.put(
         name="Upload Lynis logrotate configuration",
-        src=logrotate_config,
+        src=logrotate_config_path,
         dest="/etc/logrotate.d/lynis",
     )
 
-    acl_setup()

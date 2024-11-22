@@ -10,11 +10,14 @@ def chkrootkit_setup():
     chkrootkit_script = """#!/bin/bash
     chkrootkit > /var/log/chkrootkit/chkrootkit-scan-$(date +\\%F).log
     """
+    chkrootkit_script_path = "/tmp/run_chkrootkit_scan.sh"
+    with open(chkrootkit_script_path, "w") as f:
+        f.write(chkrootkit_script)
 
     # Upload the chkrootkit scan script
     files.put(
         name="Upload chkrootkit scan script",
-        src=chkrootkit_script,
+        src=chkrootkit_script_path,
         dest="/usr/local/bin/run_chkrootkit_scan",
         mode="755",  # Make the script executable
     )
@@ -49,10 +52,13 @@ def chkrootkit_setup():
         endscript
     }
     """
+    logrotate_config_path = "/tmp/chkrootkit_logrotate"
+    with open(logrotate_config_path, "w") as f:
+        f.write(logrotate_config)
 
     # Apply log rotation settings for chkrootkit logs
     files.put(
         name="Upload chkrootkit logrotate configuration",
-        src=logrotate_config,
+        src=logrotate_config_path,
         dest="/etc/logrotate.d/chkrootkit",
     )
