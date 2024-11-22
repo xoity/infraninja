@@ -24,11 +24,14 @@ def suricata_setup():
                 http: yes                # log HTTP events
                 tls: yes                 # log TLS events
     """
+    suricata_config_path = "/tmp/suricata.yaml"
+    with open(suricata_config_path, "w") as f:
+        f.write(suricata_config)
 
     # Upload the custom Suricata configuration file
     files.put(
         name="Upload custom Suricata configuration",
-        src=suricata_config,
+        src=suricata_config_path,
         dest="/etc/suricata/suricata.yaml",
     )
 
@@ -57,10 +60,13 @@ def suricata_setup():
         endscript
     }
     """
+    logrotate_config_path = "/tmp/suricata_logrotate"
+    with open(logrotate_config_path, "w") as f:
+        f.write(logrotate_config)
 
     # Upload log rotation configuration for Suricata logs
     files.put(
         name="Upload Suricata logrotate configuration",
-        src=logrotate_config,
+        src=logrotate_config_path,
         dest="/etc/logrotate.d/suricata",
     )

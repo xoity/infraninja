@@ -1,11 +1,3 @@
-'''
-
-this file is used to define the hosts variable as a list of tuples
-
-NOTE: THE HOST CONFIGURATIONS ARE DEFINED IN THIS FILE, AND MUST BE IN TUPLES, AND GIVEN DATA IN A DICTIONARY STLE, (if youre using ssh users and keys for example.)
-
-'''
-
 import requests
 
 # defined the hosts variable as a list of tuples
@@ -45,5 +37,5 @@ def fetch_servers(access_key):
         return []
 
 # Example usage
-access_key = "INSERT_API_KEY"  # Replace with actual access key
+access_key = "0673d874-973f-7737-8000-c933b774b29b"  # Replace with actual access key
 hosts = fetch_servers(access_key)
