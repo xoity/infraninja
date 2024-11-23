@@ -1,68 +1,110 @@
 from pyinfra.api import deploy
-from pyinfra.operations import files, openrc, server
-
+from pyinfra.operations import iptables, server, openrc, files
 
 @deploy("iptables Setup for Alpine Linux")
 def iptables_setup_alpine():
-    # Define iptables rules as a string
-    iptables_rules = """
-    # Flush existing rules
-    iptables -F
+    # Ensure chains exist before flushing
+    iptables.chain(
+        name="Ensure INPUT chain exists",
+        chain="INPUT",
+        present=True,
+    )
+    iptables.chain(
+        name="Ensure FORWARD chain exists",
+        chain="FORWARD",
+        present=True,
+    )
+    iptables.chain(
+        name="Ensure OUTPUT chain exists",
+        chain="OUTPUT",
+        present=True,
+    )
 
-    # Default policy to drop all traffic
-    iptables -P INPUT DROP
-    iptables -P FORWARD DROP
-    iptables -P OUTPUT ACCEPT
+    # Flush existing rules within chains
+    iptables.rule(
+        name="Flush existing rules in INPUT chain",
+        chain="INPUT",
+        jump="ACCEPT",
+        present=False,
+    )
+    iptables.rule(
+        name="Flush existing rules in FORWARD chain",
+        chain="FORWARD",
+        jump="ACCEPT",
+        present=False,
+    )
+    iptables.rule(
+        name="Flush existing rules in OUTPUT chain",
+        chain="OUTPUT",
+        jump="ACCEPT",
+        present=False,
+    )
 
-    # Allow loopback interface
-    iptables -A INPUT -i lo -j ACCEPT
-    iptables -A OUTPUT -o lo -j ACCEPT
+    # Set default policies
+    iptables.chain(
+        name="Set default policy for INPUT",
+        chain="INPUT",
+        policy="DROP",
+    )
+    iptables.chain(
+        name="Set default policy for FORWARD",
+        chain="FORWARD",
+        policy="DROP",
+    )
+    iptables.chain(
+        name="Set default policy for OUTPUT",
+        chain="OUTPUT",
+        policy="ACCEPT",
+    )
 
-    # Allow incoming SSH (adjust port if needed)
-    iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+    # Allow loopback traffic
+    iptables.rule(
+        name="Allow loopback traffic",
+        chain="INPUT",
+        jump="ACCEPT",
+        in_interface="lo",
+    )
 
-    # Allow incoming HTTP and HTTPS traffic
-    iptables -A INPUT -p tcp --dport 80 -j ACCEPT
-    iptables -A INPUT -p tcp --dport 443 -j ACCEPT
+    # Allow established and related incoming traffic
+    iptables.rule(
+        name="Allow established and related incoming traffic",
+        chain="INPUT",
+        jump="ACCEPT",
+        extras="-m state --state ESTABLISHED,RELATED",
+    )
 
-    # Allow established connections
-    iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+    # Allow incoming SSH
+    iptables.rule(
+        name="Allow incoming SSH",
+        chain="INPUT",
+        jump="ACCEPT",
+        protocol="tcp",
+        destination_port=22,
+    )
 
     # Logging rules for incoming traffic
-    iptables -A INPUT -j LOG --log-prefix "iptables-input: " --log-level 4
+    iptables.rule(
+        name="Log incoming traffic",
+        chain="INPUT",
+        jump="LOG",
+        log_prefix="iptables-input: ",
+    )
 
     # Save the rules to make them persistent
-    iptables-save > /etc/iptables/rules.v4
-    """
-
-    # Path for temporary local iptables rules file
-    iptables_rules_path = "/tmp/setup_iptables.sh"
-    with open(iptables_rules_path, "w") as f:
-        f.write(iptables_rules)
-
-    # Upload and apply iptables configuration script
-    files.put(
-        name="Upload iptables rules script for Alpine",
-        src=iptables_rules_path,
-        dest="/usr/local/bin/setup_iptables.sh",
-        mode="755",  # Make the script executable
-    )
-
-    # Run the iptables configuration script to apply the rules
     server.shell(
-        name="Run iptables setup script on Alpine",
-        commands="/usr/local/bin/setup_iptables.sh",
+        name="Save iptables rules",
+        commands="iptables-save > /etc/iptables/rules.v4",
     )
 
-    # Save iptables rules explicitly before trying to start the service
+    # Ensure the /etc/iptables directory exists
     server.shell(
-        name="Save iptables rules and enable persistence",
-        commands="iptables-save > /etc/iptables/rules.v4 && /etc/init.d/iptables save",
+        name="Create /etc/iptables directory",
+        commands="mkdir -p /etc/iptables",
     )
 
-    # Ensure the iptables service starts on boot and is running
+    # Enable iptables-persistent to restore rules on reboot
     openrc.service(
-        name="Start iptables service on Alpine",
+        name="Enable iptables-persistent to restore rules on reboot",
         service="iptables",
         running=True,
         enabled=True,
@@ -76,27 +118,30 @@ def iptables_setup_alpine():
 
     # Log rotation configuration content for iptables
     logrotate_config = """
-    /var/log/iptables/iptables.log {
-        daily
-        rotate 7
-        compress
-        delaycompress
-        missingok
-        notifempty
-        postrotate
-            rc-service iptables reload > /dev/null 2>&1 || true
-        endscript
-    }
+/var/log/iptables/iptables.log {
+    daily
+    missingok
+    rotate 7
+    compress
+    delaycompress
+    notifempty
+    create 0640 root adm
+    sharedscripts
+    postrotate
+        /etc/init.d/rsyslog reload > /dev/null
+    endscript
+}
     """
 
     # Path for temporary local logrotate configuration file
-    logrotate_config_path = "/tmp/iptables_logrotate.conf"
+    logrotate_config_path = "/tmp/logrotate_iptables"
     with open(logrotate_config_path, "w") as f:
         f.write(logrotate_config)
 
-    # Apply log rotation settings for iptables logs on Alpine
+    # Upload logrotate configuration file
     files.put(
-        name="Upload iptables logrotate configuration for Alpine",
+        name="Upload iptables logrotate configuration",
         src=logrotate_config_path,
         dest="/etc/logrotate.d/iptables",
+        mode="644",
     )
