@@ -20,7 +20,7 @@ This project contains configuration and deployment scripts for managing virtual 
 ### `inventory.py`
 - **Purpose**: Fetches server details from an API dynamically based on the user's access key.
   - Returns a list of servers with their IP addresses, SSH users, and SSH keys.
-- **Details**: Uses environment variables (`ACCESS_KEY` and `INVENTORY_URL`) for secure access to an API.
+- **Details**: Uses variables (`ACCESS_KEY` and `INVENTORY_URL`) for secure access to an API.
   - Fetched server details are formatted for use in Pyinfra.
 
 ---
@@ -57,7 +57,7 @@ This project contains configuration and deployment scripts for managing virtual 
 ### Test Deployment with Pyinfra
 To execute the test deployment defined in `test_deploy.py`:
 
-1. **Ensure Environment Variables Are Set**: Make sure both `ACCESS_KEY` and `INVENTORY_URL` environment variables are properly configured.
+1. **Ensure Variables Are Set**: Make sure both `ACCESS_KEY` and `INVENTORY_URL` variables are properly configured and ready to be input during runtime.
 2. **Run the Script**:
    ```bash
    pyinfra inventory.py test_deploy.py
