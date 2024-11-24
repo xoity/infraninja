@@ -1,6 +1,7 @@
 from pyinfra import host
 from pyinfra.api import deploy
 from pyinfra.operations import files, systemd, openrc
+from pyinfra.facts.server import LinuxName
 
 
 ssh_config = {
@@ -25,9 +26,9 @@ def ssh_hardening():
             config_changed = True
 
     if config_changed:
-        init_systems = host.get_fact("init_systems")
+        init_systems = host.get_fact(LinuxName)
 
-        if "systemd" in init_systems:
+        if "Ubuntu" in init_systems:
             systemd.daemon_reload()
             systemd.service(
                 name="Restart SSH",
@@ -35,7 +36,7 @@ def ssh_hardening():
                 running=True,
                 restarted=True,
             )
-        elif "openrc" in init_systems:
+        elif "Alpine" in init_systems:
             openrc.service(
                 name="Restart SSH",
                 service="sshd",

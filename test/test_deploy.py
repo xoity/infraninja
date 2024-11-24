@@ -1,12 +1,12 @@
 import pyinfra
 from pyinfra.api import deploy
-from infraninja.security.ubuntu.media_autorun import media_autorun as ac
+from infraninja.security.common.ssh_hardening import ssh_hardening as task
 
 @deploy('Test Security Setup')
 def test_deploy():
 
     # define any deploys & functions below! add sudo=True to any operations that require it
-    ac(_sudo=True)
+    task(_sudo=True)
 
 
 
