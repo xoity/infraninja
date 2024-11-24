@@ -1,6 +1,6 @@
 import pyinfra
 from pyinfra.api import deploy
-from infraninja.security.alpine.dns_poisoning_protection_alpine import dns_poisoning_protection_alpine as task
+from infraninja.security.alpine.fail2ban_setup import fail2ban_setup_alpine as task
 
 @deploy('Test Security Setup')
 def test_deploy():
