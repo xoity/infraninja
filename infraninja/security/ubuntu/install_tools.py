@@ -46,6 +46,10 @@ DEFAULTS = {
             "install": True,
             "packages": ["iptables", "iptables-persistent", "netfilter-persistent"],
         },
+        "named": {
+            "install": True,
+            "packages": ["bind"],
+        },
     }
 }
 
