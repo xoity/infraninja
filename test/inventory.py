@@ -39,6 +39,6 @@ def fetch_servers(access_key):
 
 
 # Example usage
-access_key = "0673d874-973f-7737-8000-c933b774b29b"
-url = "https://jinn-beta.kalvad.cloud/inventory/getServers/"
+access_key = input("Enter your access key: ")
+url = input("Enter the URL to fetch servers: ")
 hosts = fetch_servers(access_key)
