@@ -27,18 +27,27 @@ def fetch_servers(access_key, selected_group=None):
         # If no group is selected, prompt for selection
         if selected_group is None:
             while True:
+                choice = input("\nEnter group numbers (space-separated) or '*' for all groups: ").strip()
+                if choice == '*':
+                    selected_groups = groups
+                    break
                 try:
-                    choice = int(input("\nSelect a group number: "))
-                    if 1 <= choice <= len(groups):
-                        selected_group = groups[choice - 1]
+                    # Split input and convert to integers
+                    choices = [int(x) for x in choice.split()]
+                    # Validate all choices
+                    if all(1 <= x <= len(groups) for x in choices):
+                        selected_groups = [groups[i-1] for i in choices]
                         break
-                    print("Invalid choice. Please select a valid number.")
+                    print("Invalid choice. Please select valid numbers.")
                 except ValueError:
-                    print("Please enter a valid number.")
+                    print("Please enter valid numbers or '*'.")
 
-        print(f"\nSelected group: {selected_group}")
+            print("\nSelected groups:", ", ".join(selected_groups))
 
-        # Filter servers by selected group
+        else:
+            selected_groups = [selected_group]
+
+        # Filter servers by selected groups
         return [
             (
                 server["ssh_hostname"],
@@ -54,7 +63,7 @@ def fetch_servers(access_key, selected_group=None):
                 },
             )
             for server in data.get("result", [])
-            if server.get("group", {}).get("name_en") == selected_group
+            if server.get("group", {}).get("name_en") in selected_groups
             and server.get("is_active", False)  # Only include active servers
         ]
 
