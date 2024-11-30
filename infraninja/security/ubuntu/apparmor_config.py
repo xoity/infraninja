@@ -1,6 +1,7 @@
 from pyinfra.api import deploy
 from pyinfra.operations import apt, systemd, files, server
 
+
 @deploy("Configure AppArmor")
 def apparmor_config():
     apt.packages(
