@@ -1,6 +1,5 @@
-
 from pyinfra.api import deploy
-from pyinfra.operations import apt, systemd, files
+from pyinfra.operations import apt, systemd, files, server
 
 @deploy("Configure AppArmor")
 def apparmor_config():
@@ -21,14 +20,13 @@ def apparmor_config():
         name="Set AppArmor to enforcing mode",
         path="/etc/apparmor.d/tunables/global",
         line='APPARMOR=enforce',
-        replace=True,
+        replace='APPARMOR=.*',
     )
 
-    # Set all profiles to enforce mode
-    files.template(
-        name="Create enforce script",
-        src="templates/enforce_apparmor.sh.j2",
-        dest="/usr/local/bin/enforce_apparmor.sh",
-        mode="755",
-        create_remote_dir=True,
+    server.shell(
+        name="Reload AppArmor profiles",
+        commands=[
+            "for profile in /etc/apparmor.d/*; do apparmor_parser -r $profile || echo 'Failed to load $profile'; done"
+        ]
     )
+
