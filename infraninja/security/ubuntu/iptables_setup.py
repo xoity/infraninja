@@ -82,6 +82,22 @@ def iptables_setup():
         destination_port=22,
     )
 
+    # Disallow port scanning
+    iptables.rule(
+        name="Disallow port scanning",
+        chain="INPUT",
+        jump="DROP",
+        protocol="tcp",
+        extras="--tcp-flags ALL NONE",
+    )
+    iptables.rule(
+        name="Disallow port scanning (XMAS scan)",
+        chain="INPUT",
+        jump="DROP",
+        protocol="tcp",
+        extras="--tcp-flags ALL ALL",
+    )
+
     # Logging rules for incoming traffic
     iptables.rule(
         name="Log incoming traffic",
