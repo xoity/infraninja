@@ -8,7 +8,6 @@ def password_policy():
     login_defs_config = {
         "PASS_MAX_DAYS": "90",
         "PASS_MIN_DAYS": "7",
-        "PASS_WARN_AGE": "7",
         "LOGIN_RETRIES": "3",
         "LOGIN_TIMEOUT": "60",
         "UMASK": "027",
