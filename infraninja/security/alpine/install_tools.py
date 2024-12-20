@@ -38,6 +38,10 @@ DEFAULTS = {
             "install": True,
             "packages": ["cronie"],
         },
+        "nftables": {
+            "install": True,
+            "packages": ["nftables"],
+        },
     }
 }
 

@@ -50,6 +50,10 @@ DEFAULTS = {
             "install": True,
             "packages": ["bind"],
         },
+        "nftables": {
+            "install": True,
+            "packages": ["nftables"],
+        },
     }
 }
 
