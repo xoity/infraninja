@@ -126,38 +126,17 @@ def iptables_setup_alpine():
         enabled=True,
     )
 
-    # Create a log directory for iptables
-    server.shell(
+    # Ensure /var/log/iptables directory exists
+    files.directory(
         name="Create iptables log directory for Alpine",
-        commands="mkdir -p /var/log/iptables",
+        path="/var/log/iptables",
+        present=True,
     )
 
-    # Log rotation configuration content for iptables
-    logrotate_config = """
-/var/log/iptables/iptables.log {
-    daily
-    missingok
-    rotate 7
-    compress
-    delaycompress
-    notifempty
-    create 0640 root adm
-    sharedscripts
-    postrotate
-        /etc/init.d/rsyslog reload > /dev/null
-    endscript
-}
-    """
-
-    # Path for temporary local logrotate configuration file
-    logrotate_config_path = "/tmp/logrotate_iptables"
-    with open(logrotate_config_path, "w") as f:
-        f.write(logrotate_config)
-
-    # Upload logrotate configuration file
-    files.put(
+    # Upload logrotate config
+    files.template(
         name="Upload iptables logrotate configuration",
-        src=logrotate_config_path,
+        src="security/templates/iptables_logrotate.conf.j2",
         dest="/etc/logrotate.d/iptables",
         mode="644",
     )

@@ -1,33 +1,21 @@
 from pyinfra.api import deploy
-from pyinfra.operations import files, openrc, server
+from pyinfra.operations import files, openrc
 
 
 @deploy("Fix and configure Fail2Ban on Alpine Linux")
 def fail2ban_setup_alpine():
-    fail2ban_config_content = """
-    [DEFAULT]
-    bantime = 3600
-    findtime = 600
-    maxretry = 5
-    destemail = root@localhost
-    sender = fail2ban@localhost
-    action = %(action_mwl)s
-    """
-    fail2ban_config_path = "/tmp/jail.local"
-    with open(fail2ban_config_path, "w") as f:
-        f.write(fail2ban_config_content)
-
-    # Upload Fail2Ban configuration file
-    files.put(
-        name="Upload Fail2Ban configuration for Alpine",
-        src=fail2ban_config_path,
+    # Upload Fail2Ban configuration file from template
+    files.template(
+        name="Upload Fail2Ban config from template",
+        src="../infraninja/security/templates/fail2ban_setup_alpine.j2",
         dest="/etc/fail2ban/jail.local",
     )
 
     # Ensure the Fail2Ban log directory exists
-    server.shell(
+    files.directory(
         name="Create Fail2Ban log directory",
-        commands="mkdir -p /var/log/fail2ban",
+        path="/var/log/fail2ban",
+        present=True,
     )
 
     # Enable and start Fail2Ban service

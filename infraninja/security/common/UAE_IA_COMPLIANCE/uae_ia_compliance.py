@@ -14,9 +14,3 @@ def T4_5_1_to_T4_5_4():
         name="Port scan for changes in services",
         commands=["nmap -O localhost > /var/log/nmap.log"],
     )
-
-    # Backup firewall configurations regularly
-    server.shell(
-        name="Backup firewall configuration",
-        commands=["iptables-save > /etc/firewall.backup"],
-    )
