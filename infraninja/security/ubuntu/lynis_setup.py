@@ -19,16 +19,14 @@ def lynis_setup():
         mode="755",
     )
 
-    cron_line = (
-        "0 0 * * 7 root /usr/local/bin/run_lynis_audit"  # Weekly on Sundays at midnight
-    )
-
-    # Add or ensure the cron job line exists in /etc/crontab
-    files.line(
+    # Set up a cron job to run the Lynis audit script weekly (on Sundays at midnight)
+    server.crontab(
         name="Add Lynis cron job for weekly audits",
-        path="/etc/crontab",
-        line=cron_line,
-        present=True,
+        command="/usr/local/bin/run_lynis_audit",
+        user="root",
+        day_of_week=7,
+        hour=0,
+        minute=0,
     )
 
     # Ensure log directory exists for Lynis

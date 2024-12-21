@@ -1,0 +1,11 @@
+/var/log/suricata/eve.json {
+    daily
+    rotate 7
+    compress
+    delaycompress
+    missingok
+    notifempty
+    postrotate
+        systemctl reload suricata > /dev/null 2>&1 || true
+    endscript
+}
