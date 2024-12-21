@@ -6,7 +6,7 @@ def auditd_setup():
     # Upload auditd rules from template
     files.template(
         name="Upload custom audit.rules",
-        src="../infraninja/security/templates/auditd_rules.j2",
+        src="../infraninja/security/templates/ubuntu/auditd_rules.j2",
         dest="/etc/audit/rules.d/audit.rules",
         create_remote_dir=True,
     )
@@ -14,7 +14,7 @@ def auditd_setup():
     # Apply log rotation configuration for auditd from template
     files.template(
         name="Upload auditd logrotate config",
-        src="../infraninja/security/templates/auditd_logrotate.j2",
+        src="../infraninja/security/templates/ubuntu/auditd_logrotate.j2",
         dest="/etc/logrotate.d/audit",
     )
 

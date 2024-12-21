@@ -7,14 +7,14 @@ def lynis_setup():
     # Upload Lynis configuration file from template
     files.template(
         name="Upload Lynis configuration for detailed reporting",
-        src="../infraninja/security/templates/lynis_setup_ubuntu.j2",
+        src="../infraninja/security/templates/ubuntu/lynis_setup_ubuntu.j2",
         dest="/etc/lynis/lynis.cfg",
     )
 
     # Upload the Lynis audit wrapper script from template and make it executable
     files.template(
         name="Upload Lynis audit wrapper script",
-        src="../infraninja/security/templates/lynis_audit_script_ubuntu.j2",
+        src="../infraninja/security/templates/ubuntu/lynis_audit_script_ubuntu.j2",
         dest="/usr/local/bin/run_lynis_audit",
         mode="755",
     )
@@ -39,6 +39,6 @@ def lynis_setup():
     # Apply log rotation settings for Lynis reports from template
     files.template(
         name="Upload Lynis logrotate configuration",
-        src="../infraninja/security/templates/lynis_logrotate_ubuntu.j2",
+        src="../infraninja/security/templates/ubuntu/lynis_logrotate_ubuntu.j2",
         dest="/etc/logrotate.d/lynis",
     )

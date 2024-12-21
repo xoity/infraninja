@@ -137,7 +137,7 @@ def iptables_setup():
     # Upload logrotate config from template
     files.template(
         name="Upload iptables logrotate configuration",
-        src="security/templates/iptables_logrotate.conf.j2",
+        src="../infraninja/security/templates/iptables_logrotate.conf.j2",
         dest="/etc/logrotate.d/iptables",
         mode="644",
     )

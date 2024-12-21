@@ -1,0 +1,13 @@
+/var/log/iptables/*.log {
+    daily
+    missingok
+    rotate 14
+    compress
+    delaycompress
+    notifempty
+    create 0640 root adm
+    sharedscripts
+    postrotate
+        /etc/init.d/rsyslog reload > /dev/null
+    endscript
+}

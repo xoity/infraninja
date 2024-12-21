@@ -6,7 +6,7 @@ def chkrootkit_setup():
     # Upload the chkrootkit scan script from template and make it executable
     files.template(
         name="Upload chkrootkit scan script",
-        src="../infraninja/security/templates/chkrootkit_scan_script.j2",
+        src="../infraninja/security/templates/ubuntu/chkrootkit_scan_script.j2",
         dest="/usr/local/bin/run_chkrootkit_scan",
         mode="755",
     )
@@ -31,6 +31,6 @@ def chkrootkit_setup():
     # Apply log rotation settings for chkrootkit logs from template
     files.template(
         name="Upload chkrootkit logrotate configuration",
-        src="../infraninja/security/templates/chkrootkit_logrotate.j2",
+        src="../infraninja/security/templates/ubuntu/chkrootkit_logrotate.j2",
         dest="/etc/logrotate.d/chkrootkit",
     )

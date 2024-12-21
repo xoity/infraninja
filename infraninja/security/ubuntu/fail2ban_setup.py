@@ -7,7 +7,7 @@ def fail2ban_setup():
     # Upload Fail2Ban configuration file from template
     files.template(
         name="Upload Fail2Ban configuration for Ubuntu",
-        src="../infraninja/security/templates/fail2ban_setup_ubuntu.j2",
+        src="../infraninja/security/templates/ubuntu/fail2ban_setup_ubuntu.j2",
         dest="/etc/fail2ban/jail.local",
     )
 

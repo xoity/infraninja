@@ -14,7 +14,7 @@ def suricata_setup():
     # Upload Suricata configuration file from template
     files.template(
         name="Upload custom Suricata configuration",
-        src="../infraninja/security/templates/suricata_config.j2",
+        src="../infraninja/security/templates/alpine/suricata_config.j2",
         dest="/etc/suricata/suricata.yaml",
     )
 
@@ -36,6 +36,6 @@ def suricata_setup():
     # Apply log rotation configuration for Suricata reports from template
     files.template(
         name="Upload Suricata logrotate configuration",
-        src="../infraninja/security/templates/suricata_logrotate.j2",
+        src="../infraninja/security/templates/alpine/suricata_logrotate.j2",
         dest="/etc/logrotate.d/suricata",
     )

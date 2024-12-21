@@ -136,7 +136,7 @@ def iptables_setup_alpine():
     # Upload logrotate config
     files.template(
         name="Upload iptables logrotate configuration",
-        src="security/templates/iptables_logrotate.conf.j2",
+        src="../infraninja/security/templates/alpine/iptables_logrotate.conf.j2",
         dest="/etc/logrotate.d/iptables",
         mode="644",
     )

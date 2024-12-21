@@ -7,7 +7,7 @@ def fail2ban_setup_alpine():
     # Upload Fail2Ban configuration file from template
     files.template(
         name="Upload Fail2Ban config from template",
-        src="../infraninja/security/templates/fail2ban_setup_alpine.j2",
+        src="../infraninja/security/templates/alpine/fail2ban_setup_alpine.j2",
         dest="/etc/fail2ban/jail.local",
     )
 
