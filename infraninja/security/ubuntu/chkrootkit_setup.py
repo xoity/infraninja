@@ -1,22 +1,14 @@
 from pyinfra.api import deploy
-from pyinfra.operations import files, server
-
+from pyinfra.operations import files
 
 @deploy("chkrootkit Setup")
 def chkrootkit_setup():
-    chkrootkit_script = """#!/bin/bash
-    chkrootkit > /var/log/chkrootkit/chkrootkit-scan-$(date +\\%F).log
-    """
-    chkrootkit_script_path = "/tmp/run_chkrootkit_scan.sh"
-    with open(chkrootkit_script_path, "w") as f:
-        f.write(chkrootkit_script)
-
-    # Upload the chkrootkit scan script
-    files.put(
+    # Upload the chkrootkit scan script from template and make it executable
+    files.template(
         name="Upload chkrootkit scan script",
-        src=chkrootkit_script_path,
+        src="../infraninja/security/templates/chkrootkit_scan_script.j2",
         dest="/usr/local/bin/run_chkrootkit_scan",
-        mode="755",  # Make the script executable
+        mode="755",
     )
 
     cron_line = (
@@ -31,31 +23,16 @@ def chkrootkit_setup():
         present=True,
     )
 
-    server.shell(
+    # Ensure log directory exists for chkrootkit
+    files.directory(
         name="Create chkrootkit log directory",
-        commands="mkdir -p /var/log/chkrootkit",
+        path="/var/log/chkrootkit",
+        present=True,
     )
 
-    logrotate_config = """
-    /var/log/chkrootkit/*.log {
-        weekly
-        rotate 4
-        compress
-        delaycompress
-        missingok
-        notifempty
-        postrotate
-            /etc/init.d/chkrootkit reload > /dev/null 2>&1 || true
-        endscript
-    }
-    """
-    logrotate_config_path = "/tmp/chkrootkit_logrotate"
-    with open(logrotate_config_path, "w") as f:
-        f.write(logrotate_config)
-
-    # Apply log rotation settings for chkrootkit logs
-    files.put(
+    # Apply log rotation settings for chkrootkit logs from template
+    files.template(
         name="Upload chkrootkit logrotate configuration",
-        src=logrotate_config_path,
+        src="../infraninja/security/templates/chkrootkit_logrotate.j2",
         dest="/etc/logrotate.d/chkrootkit",
     )

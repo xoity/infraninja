@@ -1,0 +1,11 @@
+/var/log/audit/audit.log {
+    rotate 5
+    daily
+    missingok
+    notifempty
+    compress
+    delaycompress
+    postrotate
+        /etc/init.d/auditd reload > /dev/null 2>&1 || true
+    endscript
+}

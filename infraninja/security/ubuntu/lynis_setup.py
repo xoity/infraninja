@@ -4,46 +4,19 @@ from pyinfra.operations import files, server
 
 @deploy("Lynis Setup")
 def lynis_setup():
-    # Define custom Lynis configuration settings inline
-    lynis_config_content = """
-    # Enable detailed reporting
-    audit_report_detail="enabled"
-
-    # Report and log file paths
-    report_file="/var/log/lynis/lynis-report.dat"
-    log_file="/var/log/lynis/lynis.log"
-
-    # Enable full scans covering all security aspects
-    scan_profile_categories="malware, authentication, network, kernel, file_system, usb, storage, software_mgmt"
-
-    # Set verbose level to provide detailed client reports
-    verbose_level=2
-    """
-    lynis_config_path = "/tmp/lynis.cfg"
-    with open(lynis_config_path, "w") as f:
-        f.write(lynis_config_content)
-
-    # Apply custom Lynis configuration directly
-    files.put(
+    # Upload Lynis configuration file from template
+    files.template(
         name="Upload Lynis configuration for detailed reporting",
-        src=lynis_config_path,
+        src="../infraninja/security/templates/lynis_setup_ubuntu.j2",
         dest="/etc/lynis/lynis.cfg",
     )
 
-    # Wrapper script content for running a detailed Lynis audit
-    lynis_audit_script = """#!/bin/bash
-    lynis audit system --auditor "automated" > /var/log/lynis/lynis-detailed-report.txt
-    """
-    lynis_audit_script_path = "/tmp/run_lynis_audit.sh"
-    with open(lynis_audit_script_path, "w") as f:
-        f.write(lynis_audit_script)
-
-    # Upload the Lynis audit wrapper script to the server
-    files.put(
+    # Upload the Lynis audit wrapper script from template and make it executable
+    files.template(
         name="Upload Lynis audit wrapper script",
-        src=lynis_audit_script_path,
+        src="../infraninja/security/templates/lynis_audit_script_ubuntu.j2",
         dest="/usr/local/bin/run_lynis_audit",
-        mode="755",  # Make it executable
+        mode="755",
     )
 
     cron_line = (
@@ -58,31 +31,16 @@ def lynis_setup():
         present=True,
     )
 
-    server.shell(
+    # Ensure log directory exists for Lynis
+    files.directory(
         name="Create Lynis log directory",
-        commands="mkdir -p /var/log/lynis",
+        path="/var/log/lynis",
+        present=True,
     )
 
-    logrotate_config = """
-    /var/log/lynis/lynis-detailed-report.txt {
-        daily
-        rotate 14
-        compress
-        delaycompress
-        missingok
-        notifempty
-        postrotate
-            /etc/init.d/lynis reload > /dev/null 2>&1 || true
-        endscript
-    }
-    """
-    logrotate_config_path = "/tmp/lynis_logrotate"
-    with open(logrotate_config_path, "w") as f:
-        f.write(logrotate_config)
-
-    # Apply log rotation settings for Lynis reports
-    files.put(
+    # Apply log rotation settings for Lynis reports from template
+    files.template(
         name="Upload Lynis logrotate configuration",
-        src=logrotate_config_path,
+        src="../infraninja/security/templates/lynis_logrotate_ubuntu.j2",
         dest="/etc/logrotate.d/lynis",
     )
