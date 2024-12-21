@@ -19,8 +19,8 @@ def ssh_hardening():
         change = files.replace(
             name=f"Configure SSH: {option}",
             path="/etc/ssh/sshd_config",
-            text=f"^{option} .*$",
-            replace=f"{option.removeprefix('#')} {value}",
+            text=rf"^#?\s*{option}.*",
+            replace=f"{option} {value}",
         )
         if change.changed:
             config_changed = True

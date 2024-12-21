@@ -1,6 +1,6 @@
 import pyinfra
 from pyinfra.api import deploy
-from infraninja.security.common.nftables_setup import nftables_setup_alpine as task1
+from infraninja.security.common.ssh_hardening import ssh_hardening as task1
 
 
 
