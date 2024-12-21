@@ -1,5 +1,6 @@
 from pyinfra.api import deploy
-from pyinfra.operations import iptables, server, openrc, files
+from pyinfra.operations import files, iptables, openrc, server
+
 
 @deploy("iptables Setup for Alpine Linux")
 def iptables_setup_alpine():

@@ -1,5 +1,6 @@
 from pyinfra.api import deploy
-from pyinfra.operations import iptables, server, systemd, files
+from pyinfra.operations import files, iptables, server, systemd
+
 
 @deploy("iptables Setup for Ubuntu")
 def iptables_setup():

@@ -1,7 +1,8 @@
-from pyinfra.api import deploy
-from pyinfra.operations import server
-from pyinfra.facts.server import LinuxName
 from pyinfra import host
+from pyinfra.api import deploy
+from pyinfra.facts.server import LinuxName
+from pyinfra.operations import server
+
 
 @deploy("Kernel Security Hardening")
 def kernel_hardening():
@@ -21,15 +22,12 @@ def kernel_hardening():
         "net.ipv4.tcp_max_syn_backlog": "2048",
         "net.ipv4.tcp_synack_retries": "2",
         "net.ipv4.tcp_syn_retries": "5",
-        
         # Memory Protection
         "kernel.randomize_va_space": "2",
         "vm.mmap_min_addr": "65536",
         "kernel.exec-shield": "1",
-        
         # Core Dumps
         "fs.suid_dumpable": "0",
-        
         # System Security
         "kernel.sysrq": "0",
         "kernel.core_uses_pid": "1",
@@ -50,7 +48,7 @@ def kernel_hardening():
 
     # Get the Linux distribution
     linux_name = host.get_fact(LinuxName)
-    
+
     if "Alpine" in linux_name:
         server.sysctl(
             name="Apply sysctl settings for Alpine",

@@ -1,5 +1,6 @@
-from pyinfra.operations import files, server, systemd
 from pyinfra.api import deploy
+from pyinfra.operations import files, server, systemd
+
 
 @deploy("disable Media Autorun")
 def media_autorun():
@@ -20,7 +21,7 @@ def media_autorun():
     files.line(
         name="Disable media autorun",
         path="/etc/udev/rules.d/85-no-automount.rules",
-        line="ACTION==\"add\", SUBSYSTEM==\"block\", ENV{UDISKS_AUTO}=\"0\", ENV{UDISKS_IGNORE}=\"1\"",
+        line='ACTION=="add", SUBSYSTEM=="block", ENV{UDISKS_AUTO}="0", ENV{UDISKS_IGNORE}="1"',
         present=True,
     )
 

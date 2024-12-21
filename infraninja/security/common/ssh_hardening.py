@@ -1,8 +1,7 @@
 from pyinfra import host
 from pyinfra.api import deploy
-from pyinfra.operations import files, systemd, openrc
 from pyinfra.facts.server import LinuxName
-
+from pyinfra.operations import files, openrc, systemd
 
 ssh_config = {
     "PermitRootLogin": "prohibit-password",

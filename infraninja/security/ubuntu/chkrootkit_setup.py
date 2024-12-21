@@ -1,6 +1,7 @@
 from pyinfra.api import deploy
 from pyinfra.operations import files, server
 
+
 @deploy("chkrootkit Setup")
 def chkrootkit_setup():
     # Upload the chkrootkit scan script from template and make it executable

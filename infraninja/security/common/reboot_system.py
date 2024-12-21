@@ -1,5 +1,6 @@
-from pyinfra.operations import server
 from pyinfra.api import deploy
+from pyinfra.operations import server
+
 
 # When calling this deploy function, you can pass a boolean value to the need_reboot parameter
 @deploy("Reboot the system")

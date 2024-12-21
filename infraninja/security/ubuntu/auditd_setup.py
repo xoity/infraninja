@@ -1,6 +1,7 @@
 from pyinfra.api import deploy
 from pyinfra.operations import files, systemd
 
+
 @deploy("Auditd Setup")
 def auditd_setup():
     # Upload auditd rules from template

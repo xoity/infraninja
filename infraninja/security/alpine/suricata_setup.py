@@ -1,6 +1,7 @@
 from pyinfra.api import deploy
 from pyinfra.operations import files, openrc
 
+
 @deploy("Suricata Setup")
 def suricata_setup():
     # Ensure cron service is enabled and started

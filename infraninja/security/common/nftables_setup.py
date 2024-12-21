@@ -1,7 +1,7 @@
-from pyinfra.api import deploy
-from pyinfra.operations import server, openrc, systemd, files
-from pyinfra.facts.server import LinuxName
 from pyinfra import host
+from pyinfra.api import deploy
+from pyinfra.facts.server import LinuxName
+from pyinfra.operations import files, openrc, server, systemd
 
 os = host.get_fact(LinuxName)
 
@@ -28,6 +28,7 @@ def nftables_setup_alpine():
         name="Apply nftables rules",
         commands="nft -f /etc/nftables/ruleset.nft",
     )
+
 
 # Enable nftables to restore rules on reboot based on OS
 if os == "Ubuntu":

@@ -1,7 +1,7 @@
 from pyinfra import host
 from pyinfra.api import deploy
-from pyinfra.operations import apt
 from pyinfra.facts.apt import AptSources
+from pyinfra.operations import apt
 
 # Define defaults for each security tool and related packages
 DEFAULTS = {
@@ -64,7 +64,6 @@ def install_security_tools():
     for tool, tool_data in host.data.security_tools.items():
         # Check if the tool is set to install
         if tool_data["install"]:
-            
             for package in tool_data["packages"]:
                 installed_packages = host.get_fact(AptSources)
 
@@ -72,8 +71,8 @@ def install_security_tools():
                 if package not in installed_packages:
                     # Install the specified package
                     apt.packages(
-                    name=f"Install {package}",
-                    packages=[package],
+                        name=f"Install {package}",
+                        packages=[package],
                     )
                 else:
                     print(f"{package} is already installed, skipping.")

@@ -1,11 +1,13 @@
-import requests
 import logging
+
+import requests
 
 logging.basicConfig(
     level=logging.INFO,
-    format='%(message)s',
+    format="%(message)s",
 )
 logger = logging.getLogger(__name__)
+
 
 def get_groups_from_data(data):
     """Extract unique groups from server data."""
@@ -15,6 +17,7 @@ def get_groups_from_data(data):
         if group:
             groups.add(group)
     return sorted(list(groups))
+
 
 def fetch_servers(access_key, selected_group=None):
     headers = {"Authentication": access_key}
@@ -32,8 +35,10 @@ def fetch_servers(access_key, selected_group=None):
         # If no group is selected, prompt for selection
         if selected_group is None:
             while True:
-                choice = input("\nEnter group numbers (space-separated) or '*' for all groups: ").strip()
-                if choice == '*':
+                choice = input(
+                    "\nEnter group numbers (space-separated) or '*' for all groups: "
+                ).strip()
+                if choice == "*":
                     selected_groups = groups
                     break
                 try:
@@ -41,7 +46,7 @@ def fetch_servers(access_key, selected_group=None):
                     choices = [int(x) for x in choice.split()]
                     # Validate all choices
                     if all(1 <= x <= len(groups) for x in choices):
-                        selected_groups = [groups[i-1] for i in choices]
+                        selected_groups = [groups[i - 1] for i in choices]
                         break
                     logger.warning("Invalid choice. Please select valid numbers.")
                 except ValueError:
@@ -65,7 +70,11 @@ def fetch_servers(access_key, selected_group=None):
                     )
                     == "True",
                     "group_name": server.get("group", {}).get("name_en"),
-                    **{key: value for key, value in server.items() if key not in ["attributes", "ssh_user", "is_active", "group"]}
+                    **{
+                        key: value
+                        for key, value in server.items()
+                        if key not in ["attributes", "ssh_user", "is_active", "group"]
+                    },
                 },
             )
             for server in data.get("result", [])
@@ -82,6 +91,7 @@ def fetch_servers(access_key, selected_group=None):
     except Exception as e:
         logger.error("An unexpected error occurred: %s", e)
         return []
+
 
 # Example usage
 access_key = input("Enter your access key: ")

@@ -1,6 +1,5 @@
 from pyinfra.api import deploy
-from pyinfra.operations import apt, systemd, files, server
-
+from pyinfra.operations import apt, files, server, systemd
 
 
 @deploy("Configure AppArmor")
@@ -21,14 +20,13 @@ def apparmor_config():
     files.line(
         name="Set AppArmor to enforcing mode",
         path="/etc/apparmor.d/tunables/global",
-        line='APPARMOR=enforce',
-        replace='APPARMOR=.*',
+        line="APPARMOR=enforce",
+        replace="APPARMOR=.*",
     )
 
     server.shell(
         name="Reload AppArmor profiles",
         commands=[
             "for profile in /etc/apparmor.d/*; do apparmor_parser -r $profile || echo 'Failed to load $profile'; done"
-        ]
+        ],
     )
-

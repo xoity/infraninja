@@ -9,6 +9,7 @@ os = host.get_fact(LinuxName)
 # List of services to disable if present
 common_services = ["avahi-daemon", "cups", "bluetooth", "rpcbind", "vsftpd", "telnet"]
 
+
 @deploy("Disable useless services common")
 def disable_useless_services_common():
     for service in common_services:

@@ -9,4 +9,3 @@ def T4_5_1_to_T4_5_4():
         name="Network scanning and port checks",
         commands=["nmap -sS -sV -O -p- localhost -oN /var/log/nmap_scan.log"],
     )
-

@@ -1,6 +1,7 @@
 from pyinfra.api import deploy
 from pyinfra.operations import server, systemd
 
+
 @deploy("Apply Routing Controls")
 def routing_controls():
     systemd.service("apparmor", running=True, enabled=True)

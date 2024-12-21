@@ -50,4 +50,3 @@ def lynis_setup():
         src="../infraninja/security/templates/alpine/lynis_logrotate.j2",
         dest="/etc/logrotate.d/lynis",
     )
-

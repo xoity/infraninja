@@ -7,4 +7,3 @@ def clamav_setup():
     server.shell(name="Update ClamAV database", commands="freshclam")
     systemd.service("clamav-freshclam", running=True, enabled=True)
     systemd.service("clamav-daemon", running=True, enabled=True)
-

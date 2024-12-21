@@ -1,6 +1,7 @@
 from pyinfra.api import deploy
 from pyinfra.operations import server
 
+
 @deploy("ARP Poisoning Protection Rules for Alpine")
 def arp_poisoning_protection_alpine():
     # Enable ARP spoofing protection

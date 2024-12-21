@@ -1,5 +1,5 @@
 from pyinfra.api import deploy
-from pyinfra.operations import server, openrc
+from pyinfra.operations import openrc, server
 
 
 @deploy("ClamAV Setup")

@@ -1,6 +1,8 @@
+from io import StringIO
+
 from pyinfra.api import deploy
 from pyinfra.operations import files
-from io import StringIO
+
 
 @deploy("Configure Password Policy")
 def password_policy():
@@ -24,11 +26,15 @@ def password_policy():
     # Configure PAM password requirements
     files.put(
         name="Configure PAM password quality settings",
-        src=StringIO("\n".join([
-            "password requisite pam_pwquality.so retry=3",
-            "minlen=14 dcredit=-1 ucredit=-1 ocredit=-1 lcredit=-1",
-            "difok=8 maxrepeat=3 reject_username enforce_for_root"
-        ])),
+        src=StringIO(
+            "\n".join(
+                [
+                    "password requisite pam_pwquality.so retry=3",
+                    "minlen=14 dcredit=-1 ucredit=-1 ocredit=-1 lcredit=-1",
+                    "difok=8 maxrepeat=3 reject_username enforce_for_root",
+                ]
+            )
+        ),
         dest="/etc/security/pwquality.conf",
-        mode="644"
+        mode="644",
     )
