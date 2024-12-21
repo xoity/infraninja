@@ -1,8 +1,7 @@
 from pyinfra.api import deploy
-from pyinfra.operations import files, server
+from pyinfra.operations import server
 from pyinfra.facts.server import LinuxName
 from pyinfra import host
-import tempfile
 
 @deploy("Kernel Security Hardening")
 def kernel_hardening():
@@ -39,25 +38,15 @@ def kernel_hardening():
         "kernel.yama.ptrace_scope": "1",
     }
 
-    # Create a temporary file
-    with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
-        for param, value in sysctl_config.items():
-            temp_file.write(f"{param} = {value}\n")
-        temp_path = temp_file.name
-
-    # Upload the configuration file
-    files.put(
-        name="Configure sysctl security settings",
-        src=temp_path,
-        dest="/etc/sysctl.d/99-security.conf",
-        mode="644",
-    )
-
-    # Clean up the temporary file
-    server.shell(
-        name="Clean up temporary file",
-        commands=[f"rm -f {temp_path}"],
-    )
+    # Apply sysctl settings
+    for key, value in sysctl_config.items():
+        server.sysctl(
+            name=f"Set {key} to {value}",
+            key=key,
+            value=value,
+            persist=True,
+            persist_file="/etc/sysctl.d/99-security.conf",
+        )
 
     # Get the Linux distribution
     linux_name = host.get_fact(LinuxName)
