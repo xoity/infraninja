@@ -113,9 +113,10 @@ def iptables_setup():
     )
 
     # Ensure the /etc/iptables directory exists
-    server.shell(
+    files.directory(
         name="Create /etc/iptables directory",
-        commands="mkdir -p /etc/iptables",
+        path="/etc/iptables",
+        present=True,
     )
 
     # Enable iptables-persistent to restore rules on reboot

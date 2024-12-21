@@ -1,7 +1,7 @@
 from pyinfra import host
 from pyinfra.api import deploy
-from pyinfra.operations import apk
 from pyinfra.facts.apk import ApkPackages
+from pyinfra.operations import apk
 
 # Define defaults for each security tool and related packages
 DEFAULTS = {
@@ -52,18 +52,13 @@ def install_security_tools():
     for tool, tool_data in host.data.security_tools.items():
         # Check if the tool is set to install
         if tool_data["install"]:
-            # Check if the primary package is already installed
-            primary_package = tool_data["packages"][0]
-
-            # Get installed packages fact
             installed_packages = host.get_fact(ApkPackages)
-
-            # Check if package is installed
-            if primary_package not in installed_packages:
-                # Install the specified packages for this tool
-                apk.packages(
-                    name=f"Install {tool} and related packages",
-                    packages=tool_data["packages"],
-                )
-            else:
-                print(f"{primary_package} is already installed, skipping.")
+            for package in tool_data["packages"]:
+                if package not in installed_packages:
+                    # Install the specified package
+                    apk.packages(
+                        name=f"Install {package}",
+                        packages=[package],
+                    )
+                else:
+                    print(f"{package} is already installed, skipping.")

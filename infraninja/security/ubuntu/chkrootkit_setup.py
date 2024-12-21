@@ -1,5 +1,5 @@
 from pyinfra.api import deploy
-from pyinfra.operations import files
+from pyinfra.operations import files, server
 
 @deploy("chkrootkit Setup")
 def chkrootkit_setup():
@@ -11,16 +11,14 @@ def chkrootkit_setup():
         mode="755",
     )
 
-    cron_line = (
-        "0 2 * * 0 root /usr/local/bin/run_chkrootkit_scan"  # Weekly on Sundays at 2 AM
-    )
-
-    # Add or ensure the cron job line exists in /etc/crontab
-    files.line(
+    # Set up a cron job to run the chkrootkit scan script weekly (on Sundays at 2 AM)
+    server.crontab(
         name="Add chkrootkit cron job for weekly scans",
-        path="/etc/crontab",
-        line=cron_line,
-        present=True,
+        command="/usr/local/bin/run_chkrootkit_scan",
+        user="root",
+        day_of_week=0,
+        hour=2,
+        minute=0,
     )
 
     # Ensure log directory exists for chkrootkit

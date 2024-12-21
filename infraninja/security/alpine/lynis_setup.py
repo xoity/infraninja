@@ -1,5 +1,5 @@
 from pyinfra.api import deploy
-from pyinfra.operations import files, openrc
+from pyinfra.operations import files, openrc, server
 
 
 @deploy("Lynis Setup")
@@ -28,14 +28,13 @@ def lynis_setup():
     )
 
     # Set up a cron job to run the Lynis audit script weekly (on Sundays at midnight)
-    cron_line = "0 0 * * 7 /usr/local/bin/run_lynis_audit"
-
-    # Add or ensure the cron job line exists in /etc/crontabs/root for Alpine
-    files.line(
+    server.crontab(
         name="Add Lynis cron job for weekly audits in Alpine",
-        path="/etc/crontabs/root",
-        line=cron_line,
-        present=True,
+        command="/usr/local/bin/run_lynis_audit",
+        user="root",
+        day_of_week=7,
+        hour=0,
+        minute=0,
     )
 
     # Ensure log directory exists for Lynis
