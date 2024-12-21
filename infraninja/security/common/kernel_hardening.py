@@ -52,12 +52,14 @@ def kernel_hardening():
     linux_name = host.get_fact(LinuxName)
     
     if "Alpine" in linux_name:
-        server.shell(
-            name="Apply sysctl settings",
-            commands=["sysctl -p /etc/sysctl.d/99-security.conf"],
+        server.sysctl(
+            name="Apply sysctl settings for Alpine",
+            persist_file="/etc/sysctl.d/99-security.conf",
+            apply=True,
         )
     else:
-        server.shell(
-            name="Apply sysctl settings",
-            commands=["sysctl --system"],
+        server.sysctl(
+            name="Apply sysctl settings for other distributions",
+            persist_file="/etc/sysctl.d/99-security.conf",
+            apply=True,
         )
