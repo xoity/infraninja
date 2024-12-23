@@ -1,3 +1,5 @@
+#invetory.py
+
 import logging
 
 import requests
@@ -101,3 +103,4 @@ hosts = fetch_servers(access_key)
 logger.info("\nSelected servers:")
 for hostname, attrs in hosts:
     logger.info(f"- {hostname} (User: {attrs['ssh_user']})")
+
