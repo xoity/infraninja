@@ -94,8 +94,8 @@ def fetch_servers(access_key, selected_group=None):
 
 
 # Example usage
-access_key = input("Enter your access key: ")
-url = input("Enter the URL to fetch servers: ")
+access_key = input("Please enter your access key: ")
+url = input("Please enter the URL: ")
 hosts = fetch_servers(access_key)
 
 # Print selected servers for confirmation
