@@ -98,7 +98,6 @@ access_key = input("Please enter your access key: ")
 url = input("Please enter the URL: ")
 hosts = fetch_servers(access_key)
 
-# Print selected servers for confirmation
 logger.info("\nSelected servers:")
 for hostname, attrs in hosts:
     logger.info(f"- {hostname} (User: {attrs['ssh_user']})")
