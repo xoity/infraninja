@@ -79,7 +79,7 @@ def fetch_servers(access_key, selected_group=None):
             )
             for server in data.get("result", [])
             if server.get("group", {}).get("name_en") in selected_groups
-            and server.get("is_active", False)  # Only include active servers
+            and server.get("is_active", False)  # Only active servers
         ]
 
     except requests.exceptions.RequestException as e:
