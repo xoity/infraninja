@@ -65,7 +65,7 @@ DEFAULTS = {
 @deploy("Install Security Tools", data_defaults=DEFAULTS)
 def install_security_tools():
     # Loop over each tool in the host data
-    for tool, tool_data in host.data.security_tools.items():
+    for _, tool_data in host.data.security_tools.items():
         # Check if the tool is set to install
         if tool_data["install"]:
             for package in tool_data["packages"]:
