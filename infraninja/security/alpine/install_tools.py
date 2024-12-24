@@ -42,6 +42,10 @@ DEFAULTS = {
             "install": True,
             "packages": ["nftables"],
         },
+        "ntp": {
+            "install": True,
+            "packages": ["ntp"],
+        },
     }
 }
 

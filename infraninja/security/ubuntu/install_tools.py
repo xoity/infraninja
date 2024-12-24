@@ -46,7 +46,6 @@ DEFAULTS = {
             "install": True,
             "packages": ["iptables", "iptables-persistent", "netfilter-persistent"],
         },
-<<<<<<< HEAD
         "named": {
             "install": True,
             "packages": ["bind"],
@@ -55,8 +54,10 @@ DEFAULTS = {
             "install": True,
             "packages": ["nftables"],
         },
-=======
->>>>>>> parent of 87df1a6 (	new file:   infraninja/security/alpine/dns_poisoning_protection_alpine.py)
+        "ntp": {
+            "install": True,
+            "packages": ["ntp"],
+        },
     }
 }
 
