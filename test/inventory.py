@@ -32,7 +32,7 @@ def fetch_servers(access_key, selected_group=None):
         groups = get_groups_from_data(data)
         logger.info("\nAvailable groups:")
         for i, group in enumerate(groups, 1):
-            logger.info(f"{i}. {group}")
+            logger.info("%d. %s", i, group)
 
         # If no group is selected, prompt for selection
         if selected_group is None:
@@ -95,12 +95,12 @@ def fetch_servers(access_key, selected_group=None):
         return []
 
 
-# Example usage
 access_key = input("Please enter your access key: ")
+global url
 url = input("Please enter the URL: ")
 hosts = fetch_servers(access_key)
 
 logger.info("\nSelected servers:")
 for hostname, attrs in hosts:
-    logger.info(f"- {hostname} (User: {attrs['ssh_user']})")
+    logger.info("- %s (User: %s)", hostname, attrs['ssh_user'])
 
