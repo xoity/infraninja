@@ -21,8 +21,8 @@ def get_groups_from_data(data):
     return sorted(list(groups))
 
 
-def fetch_servers(api_key, selected_group=None): 
-    headers = {"Authentication": api_key}
+def fetch_servers(access_key, selected_group=None):
+    headers = {"Authentication": access_key}
     try:
         response = requests.get(url, headers=headers)
         response.raise_for_status()
@@ -81,7 +81,7 @@ def fetch_servers(api_key, selected_group=None):
             )
             for server in data.get("result", [])
             if server.get("group", {}).get("name_en") in selected_groups
-            and server.get("is_active", False)  # active servers
+            and server.get("is_active", False)  # Only active servers
         ]
 
     except requests.exceptions.RequestException as e:
@@ -95,17 +95,12 @@ def fetch_servers(api_key, selected_group=None):
         return []
 
 
-def main():
-    access_key = input("Please enter your access key: ")
-    global url  # cuz url is used in fetch_servers
-    url = input("Please enter the URL: ")
-    hosts = fetch_servers(access_key)
+# Example usage
+access_key = input("Please enter your access key: ")
+url = input("Please enter the URL: ")
+hosts = fetch_servers(access_key)
 
-    logger.info("\nSelected servers:")
-    for hostname, attrs in hosts:
-        logger.info(f"- {hostname} (User: {attrs['ssh_user']})")
-
-
-if __name__ == "__main__":
-    main()
+logger.info("\nSelected servers:")
+for hostname, attrs in hosts:
+    logger.info(f"- {hostname} (User: {attrs['ssh_user']})")
 
