@@ -18,11 +18,9 @@ def ssh_hardening():
     for option, value in ssh_config.items():
         # Find existing lines first
         matching_lines = host.get_fact(
-            FindInFile, 
-            path="/etc/ssh/sshd_config",
-            pattern=rf"^#?\s*{option}\s+.*$"
+            FindInFile, path="/etc/ssh/sshd_config", pattern=rf"^#?\s*{option}\s+.*$"
         )
-        
+
         if matching_lines:
             change = files.replace(
                 name=f"Configure SSH: {option}",
@@ -35,9 +33,7 @@ def ssh_hardening():
         else:
             # Append if not found
             files.line(
-                path="/etc/ssh/sshd_config",
-                line=f"{option} {value}",
-                present=True
+                path="/etc/ssh/sshd_config", line=f"{option} {value}", present=True
             )
             config_changed = True
 
