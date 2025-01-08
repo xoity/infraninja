@@ -2,6 +2,7 @@ from pyinfra import host
 from pyinfra.api import deploy
 from pyinfra.facts.server import LinuxName
 from pyinfra.operations import files, openrc, systemd
+from pyinfra.facts.files import FindInFile
 
 ssh_config = {
     "PermitRootLogin": "prohibit-password",
@@ -15,13 +16,29 @@ def ssh_hardening():
     config_changed = False
 
     for option, value in ssh_config.items():
-        change = files.replace(
-            name=f"Configure SSH: {option}",
+        # Find existing lines first
+        matching_lines = host.get_fact(
+            FindInFile, 
             path="/etc/ssh/sshd_config",
-            text=rf"^#?\s*{option}.*",
-            replace=f"{option} {value}",
+            pattern=rf"^#?\s*{option}\s+.*$"
         )
-        if change.changed:
+        
+        if matching_lines:
+            change = files.replace(
+                name=f"Configure SSH: {option}",
+                path="/etc/ssh/sshd_config",
+                text=f"^{matching_lines[0]}$",
+                replace=f"{option} {value}",
+            )
+            if change.changed:
+                config_changed = True
+        else:
+            # Append if not found
+            files.line(
+                path="/etc/ssh/sshd_config",
+                line=f"{option} {value}",
+                present=True
+            )
             config_changed = True
 
     if config_changed:

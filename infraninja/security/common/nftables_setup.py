@@ -32,7 +32,7 @@ def nftables_setup_alpine():
 
 # Enable nftables to restore rules on reboot based on OS
 if os == "Ubuntu":
-    systemd.systemd(
+    systemd.service(
         name="Enable nftables service",
         service="nftables",
         running=True,
