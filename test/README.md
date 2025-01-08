@@ -106,10 +106,6 @@ To run additional deployment tasks, you can import modules from `infraninja` or 
 
 ## Troubleshooting
 
-- **Access Key Not Set**:
-  - Ensure the `ACCESS_KEY` environment variable is correctly configured.
-  - Confirm the key has the necessary permissions in an API.
-
 - **Inventory URL Missing**:
   - Verify the `INVENTORY_URL` variable points to the correct endpoint.
   - Test the endpoint using `curl` or similar tools.
