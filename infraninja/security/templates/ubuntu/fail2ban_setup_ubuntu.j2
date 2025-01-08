@@ -1,0 +1,12 @@
+[DEFAULT]
+bantime = 3600
+findtime = 600
+maxretry = 5
+destemail = root@localhost
+sender = fail2ban@localhost
+action = %(action_mwl)s
+
+[sshd]
+enabled = true
+port = ssh
+logpath = %(sshd_log)s

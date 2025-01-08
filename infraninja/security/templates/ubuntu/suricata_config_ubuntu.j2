@@ -1,0 +1,14 @@
+# Basic logging setup for Suricata to monitor all network traffic with high verbosity
+outputs:
+- eve-log:
+    enabled: yes
+    filetype: regular
+    filename: /var/log/suricata/eve.json
+    types:
+        - alert:
+            payload: yes             # enable payload in logs
+            payload-printable: yes   # printable (ASCII) payload
+            packet: yes              # enable logging of packet in logs
+            metadata: yes            # include metadata
+            http: yes                # log HTTP events
+            tls: yes                 # log TLS events

@@ -1,0 +1,11 @@
+/var/log/lynis/lynis-detailed-report.txt {
+    daily
+    rotate 14
+    compress
+    delaycompress
+    missingok
+    notifempty
+    postrotate
+        /etc/init.d/lynis reload > /dev/null 2>&1 || true
+    endscript
+}

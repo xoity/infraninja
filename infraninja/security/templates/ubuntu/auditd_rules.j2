@@ -1,0 +1,8 @@
+-w /etc/passwd -p wa -k passwd_changes
+-w /etc/shadow -p wa -k shadow_changes
+-w /etc/sudoers -p wa -k sudoers_changes
+-w /etc/ssh/sshd_config -p wa -k ssh_config_changes
+-w /var/log/auth.log -p wa -k auth_logs
+-w /bin/su -p x -k su_command
+-a always,exit -F arch=b64 -S execve -C uid!=euid -k suspicious_exec
+-a always,exit -F arch=b64 -S chmod,creat,unlink -F auid>=1000 -F auid!=4294967295 -k user_file_modifications

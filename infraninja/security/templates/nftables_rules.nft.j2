@@ -1,0 +1,68 @@
+#!/usr/bin/nft -f
+
+# Clear all previous rules
+flush ruleset
+
+table inet filter {
+    chain input {
+        type filter hook input priority 0; policy drop;
+
+        # Allow loopback traffic
+        iif "lo" accept
+        
+        # Connection tracking
+        ct state invalid drop
+        ct state established,related accept
+        
+        # ICMP and ICMPv6 (ping)
+        ip protocol icmp icmp type { echo-request, echo-reply, destination-unreachable, time-exceeded } accept
+        ip6 nexthdr icmpv6 icmpv6 type { echo-request, echo-reply, destination-unreachable, packet-too-big, time-exceeded, nd-router-advert, nd-neighbor-solicit, nd-neighbor-advert } accept
+
+        # SSH access (configurable port)
+        tcp dport {{ ssh_port | default('22') }} accept
+        
+        # Optional HTTP/HTTPS access
+        {% if allow_http | default(false) %}
+        tcp dport { 80, 443 } accept
+        {% endif %}
+
+        # Rate limiting for SSH
+        tcp dport {{ ssh_port | default('22') }} limit rate {{ ssh_rate_limit | default('10/minute') }} accept
+
+        # Logging for denied packets
+        log prefix "[NFT] Input Denied: " counter drop
+    }
+
+    chain forward {
+        type filter hook forward priority 0; policy drop;
+        
+        # Log dropped forward packets
+        log prefix "[NFT] Forward Denied: " counter drop
+    }
+
+    chain output {
+        type filter hook output priority 0; policy accept;
+        
+        # Optional: restrict outbound connections
+        {% if restrict_outbound | default(false) %}
+        tcp dport { 53, 80, 443, {{ ssh_port | default('22') }} } accept
+        udp dport { 53, 123 } accept  # DNS and NTP
+        {% endif %}
+    }
+}
+
+{% if enable_dos_protection | default(true) %}
+table inet dos_protection {
+    chain dos_protect {
+        type filter hook input priority -10;
+        
+        # TCP SYN flood protection
+        tcp flags & (fin|syn|rst|ack) == syn limit rate {{ syn_flood_rate | default('100/second') }} accept
+        tcp flags & (fin|syn|rst|ack) == syn drop
+        
+        # Connection tracking protection
+        ct state new limit rate {{ new_conn_rate | default('50/second') }} accept
+        ct state new drop
+    }
+}
+{% endif %}
