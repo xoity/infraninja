@@ -1,4 +1,4 @@
-# invetory.py
+# invetory || jinn.py
 
 import logging
 import paramiko
