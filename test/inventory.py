@@ -1,8 +1,9 @@
-# invetory.py
+# invetory || jinn.py
 
 import logging
-
+import paramiko
 import requests
+from typing import Dict, Any, List, Tuple
 
 logging.basicConfig(
     level=logging.INFO,
@@ -21,10 +22,40 @@ def get_groups_from_data(data):
     return sorted(list(groups))
 
 
-def fetch_servers(access_key, selected_group=None):
+def fetch_ssh_config(access_key: str) -> str:
+    """Fetch SSH configuration from API."""
     headers = {"Authentication": access_key}
+    response = requests.get(
+        ssh_config_url,
+        headers=headers
+    )
+    return response.text
+
+
+def parse_ssh_config(config_text: str) -> Dict[str, Dict[str, str]]:
+    """Parse SSH config text into dictionary."""
+    configs = {}
+    current_host = None
+    
+    for line in config_text.splitlines():
+        line = line.strip()
+        if line.startswith('Host ') and not line.startswith('Host *'):
+            current_host = line.split()[1]
+            configs[current_host] = {}
+        elif current_host and '    ' in line:
+            key, value = line.strip().split(None, 1)
+            configs[current_host][key] = value
+    return configs
+
+
+def fetch_servers(access_key: str, selected_group: str = None) -> List[Tuple[str, Dict[str, Any]]]:
     try:
-        response = requests.get(url, headers=headers)
+        # Fetch and parse SSH configs
+        ssh_configs = parse_ssh_config(fetch_ssh_config(access_key))
+        
+        # Existing API call for servers
+        headers = {"Authentication": access_key}
+        response = requests.get(inventory_api_url, headers=headers)
         response.raise_for_status()
         data = response.json()
 
@@ -65,12 +96,14 @@ def fetch_servers(access_key, selected_group=None):
                 server["ssh_hostname"],
                 {
                     **server.get("attributes", {}),
-                    "ssh_user": server.get("ssh_user"),
+                    "ssh_user": ssh_configs.get(server["ssh_hostname"], {}).get("User", server.get("ssh_user")),
                     "is_active": server.get("is_active", False),
-                    "install_postgres": server.get("attributes", {}).get(
-                        "docker", "False"
-                    )
-                    == "True",
+                    "ssh_paramiko_connect_kwargs": {
+                        "key_filename": ssh_configs.get(server["ssh_hostname"], {}).get("IdentityFile"),
+                        "sock": paramiko.ProxyCommand(
+                            ssh_configs.get(server["ssh_hostname"], {}).get("ProxyCommand", "")
+                        ) if ssh_configs.get(server["ssh_hostname"], {}).get("ProxyCommand") else None
+                    },
                     "group_name": server.get("group", {}).get("name_en"),
                     **{
                         key: value
@@ -96,8 +129,9 @@ def fetch_servers(access_key, selected_group=None):
 
 
 access_key = input("Please enter your access key: ")
-global url
-url = input("Please enter the URL: ")
+global inventory_api_url, ssh_config_url
+inventory_api_url = input("Please enter the URL to list inventory: ")
+ssh_config_url = input("Please enter the URL for SSH config: ")
 hosts = fetch_servers(access_key)
 
 logger.info("\nSelected servers:")

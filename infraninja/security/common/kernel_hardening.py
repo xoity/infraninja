@@ -1,11 +1,34 @@
 from pyinfra import host
 from pyinfra.api import deploy
-from pyinfra.facts.server import LinuxName
-from pyinfra.operations import server
+from pyinfra.facts.server import LinuxName, LinuxDistribution
+from pyinfra.operations import server, files
 
 
 @deploy("Kernel Security Hardening")
 def kernel_hardening():
+    # Check if running on Linux
+    linux_name = host.get_fact(LinuxName)
+    linux_dist = host.get_fact(LinuxDistribution)
+    
+    if not linux_name:
+        print("[ERROR] This script requires a Linux system")
+        return False
+
+    # Verify sysctl is available
+    if not server.shell(
+        name="Check if sysctl exists",
+        commands=["command -v sysctl"],
+    ):
+        print("[ERROR] sysctl command not found")
+        return False
+
+    # Create sysctl config directory if it doesn't exist
+    files.directory(
+        name="Ensure sysctl.d directory exists",
+        path="/etc/sysctl.d",
+        present=True,
+    )
+
     # Kernel hardening configuration
     sysctl_config = {
         # Network Security
@@ -36,28 +59,36 @@ def kernel_hardening():
         "kernel.yama.ptrace_scope": "1",
     }
 
-    # Apply sysctl settings
+    # Apply sysctl settings with error handling
+    failed_settings = []
     for key, value in sysctl_config.items():
-        server.sysctl(
-            name=f"Set {key} to {value}",
-            key=key,
-            value=value,
-            persist=True,
-            persist_file="/etc/sysctl.d/99-security.conf",
-        )
+        try:
+            server.sysctl(
+                name=f"Set {key} to {value}",
+                key=key,
+                value=value,
+                persist=True,
+                persist_file="/etc/sysctl.d/99-security.conf",
+                    )
+        except Exception as e:
+            failed_settings.append(key)
+            print(f"[WARNING] Failed to set {key}: {str(e)}")
 
-    # Get the Linux distribution
-    linux_name = host.get_fact(LinuxName)
-
-    if "Alpine" in linux_name:
+    # Apply settings based on distribution
+    
+    try:
         server.sysctl(
-            name="Apply sysctl settings for Alpine",
+            name=f"Apply sysctl settings for {linux_dist}",
             persist_file="/etc/sysctl.d/99-security.conf",
             apply=True,
-        )
-    else:
-        server.sysctl(
-            name="Apply sysctl settings for other distributions",
-            persist_file="/etc/sysctl.d/99-security.conf",
-            apply=True,
-        )
+            )
+    except Exception as e:
+        print(f"[WARNING] Failed to apply sysctl settings: {str(e)}")
+        return False
+
+    if failed_settings:
+        print(f"[WARNING] Failed to set some kernel parameters: {', '.join(failed_settings)}")
+        return False
+
+    print("[SUCCESS] Kernel hardening completed")
+    return True
