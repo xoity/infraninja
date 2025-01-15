@@ -1,6 +1,6 @@
 import pyinfra
 from pyinfra.api import deploy
-from infraninja.security.alpine.install_tools import install_security_tools as task1
+from infraninja.security.common.kernel_hardening import kernel_hardening as task1
 from infraninja.security.common.ssh_hardening import ssh_hardening as task2
 
 
