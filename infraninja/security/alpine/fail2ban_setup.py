@@ -4,13 +4,14 @@ from pyinfra.api.exceptions import (
     DeployError,
     OperationError,
     OperationValueError,
-    PyinfraError
+    PyinfraError,
 )
 from pyinfra.operations import files, openrc
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 @deploy("Fix and configure Fail2Ban on Alpine Linux")
 def fail2ban_setup_alpine():
