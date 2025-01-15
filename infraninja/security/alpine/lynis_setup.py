@@ -1,52 +1,103 @@
 from pyinfra.api import deploy
 from pyinfra.operations import files, openrc, server
+from pyinfra import host
+from pyinfra.facts.files import File, Directory
 
 
 @deploy("Lynis Setup")
 def lynis_setup():
-    # Ensure cron service is enabled and started
-    openrc.service(
-        name="Enable and start cron service",
-        service="crond",
-        running=True,
-        enabled=True,
-    )
+    # Check if Lynis is installed
+    if not host.get_fact(File("/usr/bin/lynis")):
+        host.noop(
+            name="Skip Lynis setup - lynis not installed",
+            warning="Lynis is not installed on the system"
+        )
+        return
 
-    # Upload Lynis configuration file from template
-    files.template(
-        name="Upload Lynis config from template",
-        src="../infraninja/security/templates/alpine/lynis_setup.j2",
-        dest="/etc/lynis/lynis.cfg",
-    )
+    # Check and enable cron service
+    if not host.get_fact(File("/etc/init.d/crond")):
+        host.noop(
+            name="Skip cron setup - crond service not found",
+            warning="Cron service not found"
+        )
+    else:
+        openrc.service(
+            name="Enable and start cron service",
+            service="crond",
+            running=True,
+            enabled=True,
+        )
 
-    # Upload the Lynis audit wrapper script from template and make it executable
-    files.template(
-        name="Upload Lynis audit wrapper script for Alpine",
-        src="../infraninja/security/templates/alpine/lynis_audit_script.j2",
-        dest="/usr/local/bin/run_lynis_audit",
-        mode="755",
-    )
+    # Ensure config directory exists
+    if not host.get_fact(Directory("/etc/lynis")):
+        files.directory(
+            name="Create Lynis config directory",
+            path="/etc/lynis",
+            present=True,
+        )
 
-    # Set up a cron job to run the Lynis audit script weekly (on Sundays at midnight)
-    server.crontab(
-        name="Add Lynis cron job for weekly audits in Alpine",
-        command="/usr/local/bin/run_lynis_audit",
-        user="root",
-        day_of_week=7,
-        hour=0,
-        minute=0,
-    )
+    # Upload configuration files with error handling
+    config_files = [
+        {
+            "name": "Upload Lynis config",
+            "src": "../infraninja/security/templates/alpine/lynis_setup.j2",
+            "dest": "/etc/lynis/lynis.cfg"
+        },
+        {
+            "name": "Upload Lynis audit wrapper script",
+            "src": "../infraninja/security/templates/alpine/lynis_audit_script.j2",
+            "dest": "/usr/local/bin/run_lynis_audit",
+            "mode": "755"
+        }
+    ]
 
-    # Ensure log directory exists for Lynis
-    files.directory(
-        name="Create Lynis log directory for Alpine",
-        path="/var/log/lynis",
-        present=True,
-    )
+    for config in config_files:
+        try:
+            files.template(
+                name=config["name"],
+                src=config["src"],
+                dest=config["dest"],
+                mode=config.get("mode"),
+                )
+        except Exception as e:
+            host.noop(
+                name=f"Failed to upload {config['dest']}",
+                warning=f"Error uploading configuration: {str(e)}"
+            )
 
-    # Apply log rotation configuration for Lynis reports from template
-    files.template(
-        name="Upload Lynis logrotate configuration for Alpine",
-        src="../infraninja/security/templates/alpine/lynis_logrotate.j2",
-        dest="/etc/logrotate.d/lynis",
-    )
+    # Set up cron job with error handling
+    try:
+        server.crontab(
+            name="Add Lynis cron job for weekly audits",
+            command="/usr/local/bin/run_lynis_audit",
+            user="root",
+            day_of_week=7,
+            hour=0,
+            minute=0,
+        )
+    except Exception as e:
+        host.noop(
+            name="Failed to setup cron job",
+            warning=f"Error setting up cron job: {str(e)}"
+        )
+
+    # Create log directory
+    if not host.get_fact(Directory("/var/log/lynis")):
+        files.directory(
+            name="Create Lynis log directory",
+            path="/var/log/lynis",
+            present=True,
+        )
+
+    # Setup logrotate with error handling
+    try:
+        files.template(
+            name="Upload Lynis logrotate configuration",
+            src="../infraninja/security/templates/alpine/lynis_logrotate.j2",
+            dest="/etc/logrotate.d/lynis",
+        )
+    except Exception as e:
+        host.noop(
+            name="Failed to setup logrotate",
+            warning=f"Error setting up logrotate: {str(e)}"
+        )
