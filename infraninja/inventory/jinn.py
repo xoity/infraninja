@@ -25,10 +25,7 @@ def get_groups_from_data(data):
 def fetch_ssh_config(access_key: str) -> str:
     """Fetch SSH configuration from API."""
     headers = {"Authentication": access_key}
-    response = requests.get(
-        ssh_config_url,
-        headers=headers
-    )
+    response = requests.get(ssh_config_url, headers=headers)
     return response.text
 
 
@@ -36,23 +33,25 @@ def parse_ssh_config(config_text: str) -> Dict[str, Dict[str, str]]:
     """Parse SSH config text into dictionary."""
     configs = {}
     current_host = None
-    
+
     for line in config_text.splitlines():
         line = line.strip()
-        if line.startswith('Host ') and not line.startswith('Host *'):
+        if line.startswith("Host ") and not line.startswith("Host *"):
             current_host = line.split()[1]
             configs[current_host] = {}
-        elif current_host and '    ' in line:
+        elif current_host and "    " in line:
             key, value = line.strip().split(None, 1)
             configs[current_host][key] = value
     return configs
 
 
-def fetch_servers(access_key: str, selected_group: str = None) -> List[Tuple[str, Dict[str, Any]]]:
+def fetch_servers(
+    access_key: str, selected_group: str = None
+) -> List[Tuple[str, Dict[str, Any]]]:
     try:
         # Fetch and parse SSH configs
         ssh_configs = parse_ssh_config(fetch_ssh_config(access_key))
-        
+
         # Existing API call for servers
         headers = {"Authentication": access_key}
         response = requests.get(inventory_api_url, headers=headers)
@@ -96,13 +95,23 @@ def fetch_servers(access_key: str, selected_group: str = None) -> List[Tuple[str
                 server["ssh_hostname"],
                 {
                     **server.get("attributes", {}),
-                    "ssh_user": ssh_configs.get(server["ssh_hostname"], {}).get("User", server.get("ssh_user")),
+                    "ssh_user": ssh_configs.get(server["ssh_hostname"], {}).get(
+                        "User", server.get("ssh_user")
+                    ),
                     "is_active": server.get("is_active", False),
                     "ssh_paramiko_connect_kwargs": {
-                        "key_filename": ssh_configs.get(server["ssh_hostname"], {}).get("IdentityFile"),
+                        "key_filename": ssh_configs.get(server["ssh_hostname"], {}).get(
+                            "IdentityFile"
+                        ),
                         "sock": paramiko.ProxyCommand(
-                            ssh_configs.get(server["ssh_hostname"], {}).get("ProxyCommand", "")
-                        ) if ssh_configs.get(server["ssh_hostname"], {}).get("ProxyCommand") else None
+                            ssh_configs.get(server["ssh_hostname"], {}).get(
+                                "ProxyCommand", ""
+                            )
+                        )
+                        if ssh_configs.get(server["ssh_hostname"], {}).get(
+                            "ProxyCommand"
+                        )
+                        else None,
                     },
                     "group_name": server.get("group", {}).get("name_en"),
                     **{
