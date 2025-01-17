@@ -23,10 +23,6 @@ DEFAULTS = {
             "install": True,
             "packages": ["clamav", "clamav-daemon"],
         },
-        "lynis": {
-            "install": True,
-            "packages": ["lynis"],
-        },
         "suricata": {
             "install": True,
             "packages": ["suricata"],
@@ -42,10 +38,6 @@ DEFAULTS = {
         "nftables": {
             "install": True,
             "packages": ["nftables"],
-        },
-        "ntp": {
-            "install": True,
-            "packages": ["ntp"],
         },
     }
 }

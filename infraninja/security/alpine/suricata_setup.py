@@ -6,44 +6,29 @@ from pyinfra.facts.files import File, Directory
 @deploy("Suricata Setup")
 def suricata_setup():
     # Check if Suricata is installed
-    if not host.get_fact(File("/usr/bin/suricata")):
-        host.noop(
-            name="Skip Suricata setup - suricata not installed",
-            warning="Suricata is not installed on the system"
-        )
+    if host.get_fact(File, path="/usr/bin/suricata") is None:
+        host.noop("Skip Suricata setup - suricata not installed")
         return
 
-    else:
-        openrc.service(
-            name="Enable and start cron service",
-            service="crond",
-            running=True,
-            enabled=True,
-        )
-
     # Ensure config directory exists
-    if not host.get_fact(Directory("/etc/suricata")):
+    if host.get_fact(Directory, path="/etc/suricata") is None:
         files.directory(
             name="Create Suricata config directory",
             path="/etc/suricata",
             present=True,
+            _ignore_errors=True
         )
 
     # Upload Suricata configuration
-    try:
-        files.template(
-            name="Upload custom Suricata configuration",
-            src="../infraninja/security/templates/alpine/suricata_config.j2",
-            dest="/etc/suricata/suricata.yaml",
-        )
-    except Exception as e:
-        host.noop(
-            name="Failed to upload Suricata config",
-            warning=f"Error uploading configuration: {str(e)}"
-        )
+    if not files.template(
+        name="Upload custom Suricata configuration",
+        src="../infraninja/security/templates/alpine/suricata_config.j2",
+        dest="/etc/suricata/suricata.yaml",
+    ):
+        host.noop("Skip Suricata config - failed to upload configuration")
 
     # Create log directory
-    if not host.get_fact(Directory("/var/log/suricata")):
+    if host.get_fact(Directory, path="/var/log/suricata") is None:
         files.directory(
             name="Create Suricata log directory",
             path="/var/log/suricata",
@@ -51,11 +36,8 @@ def suricata_setup():
         )
 
     # Check and enable Suricata service
-    if not host.get_fact(File("/etc/init.d/suricata")):
-        host.noop(
-            name="Skip Suricata service setup",
-            warning="Suricata service not found"
-        )
+    if host.get_fact(File, path="/etc/init.d/suricata") is None:
+        host.noop("Skip Suricata service - service not found")
     else:
         openrc.service(
             name="Enable and start Suricata",
@@ -64,15 +46,12 @@ def suricata_setup():
             enabled=True,
         )
 
-    # Setup logrotate with error handling
-    try:
-        files.template(
-            name="Upload Suricata logrotate configuration",
-            src="../infraninja/security/templates/alpine/suricata_logrotate.j2",
-            dest="/etc/logrotate.d/suricata",
-        )
-    except Exception as e:
-        host.noop(
-            name="Failed to setup logrotate",
-            warning=f"Error setting up logrotate: {str(e)}"
-        )
+    # Setup logrotate
+    if not files.template(
+        name="Upload Suricata logrotate configuration",
+        src="../infraninja/security/templates/alpine/suricata_logrotate.j2",
+        dest="/etc/logrotate.d/suricata",
+    ):
+        host.noop("Skip logrotate setup - failed to upload configuration")
+
+    return True

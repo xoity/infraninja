@@ -1,6 +1,6 @@
 from pyinfra import host
 from pyinfra.api import deploy
-from pyinfra.facts.server import LinuxName, LinuxDistribution
+from pyinfra.facts.server import LinuxName
 from pyinfra.operations import server, files
 
 
@@ -8,7 +8,6 @@ from pyinfra.operations import server, files
 def kernel_hardening():
     # Check if running on Linux
     linux_name = host.get_fact(LinuxName)
-    linux_dist = host.get_fact(LinuxDistribution)
     
     if not linux_name:
         print("[ERROR] This script requires a Linux system")
@@ -19,6 +18,7 @@ def kernel_hardening():
         name="Check if sysctl exists",
         commands=["command -v sysctl"],
     ):
+    
         print("[ERROR] sysctl command not found")
         return False
 
@@ -48,7 +48,6 @@ def kernel_hardening():
         # Memory Protection
         "kernel.randomize_va_space": "2",
         "vm.mmap_min_addr": "65536",
-        "kernel.exec-shield": "1",
         # Core Dumps
         "fs.suid_dumpable": "0",
         # System Security
@@ -56,39 +55,46 @@ def kernel_hardening():
         "kernel.core_uses_pid": "1",
         "kernel.dmesg_restrict": "1",
         "kernel.kptr_restrict": "2",
-        "kernel.yama.ptrace_scope": "1",
     }
 
     # Apply sysctl settings with error handling
     failed_settings = []
     for key, value in sysctl_config.items():
         try:
+            # Check if sysctl key exists
+            if not server.shell(
+                name=f"Check if {key} exists",
+                commands=[f"test -f /proc/sys/{key.replace('.', '/')}"],
+                _ignore_errors=True
+            ):
+                host.noop(f"Skip {key} - parameter not supported")
+                continue
+
             server.sysctl(
                 name=f"Set {key} to {value}",
                 key=key,
                 value=value,
                 persist=True,
                 persist_file="/etc/sysctl.d/99-security.conf",
-                    )
+            )
         except Exception as e:
             failed_settings.append(key)
-            print(f"[WARNING] Failed to set {key}: {str(e)}")
+            host.noop(f"Failed to set {key}: {str(e)}")
+            continue
 
-    # Apply settings based on distribution
-    
+    # Apply settings
     try:
-        server.sysctl(
-            name=f"Apply sysctl settings for {linux_dist}",
-            persist_file="/etc/sysctl.d/99-security.conf",
-            apply=True,
-            )
+        server.shell(
+            name="Apply sysctl settings",
+            commands=["sysctl -p /etc/sysctl.d/99-security.conf"],
+            _ignore_errors=True
+        )
     except Exception as e:
-        print(f"[WARNING] Failed to apply sysctl settings: {str(e)}")
-        return False
+        host.noop(f"Warning - Failed to apply sysctl settings: {str(e)}")
 
     if failed_settings:
-        print(f"[WARNING] Failed to set some kernel parameters: {', '.join(failed_settings)}")
+        host.noop(f"Warning - Failed to set some kernel parameters: {', '.join(failed_settings)}")
         return False
 
-    print("[SUCCESS] Kernel hardening completed")
+    host.noop("Success - Kernel hardening completed")
     return True
