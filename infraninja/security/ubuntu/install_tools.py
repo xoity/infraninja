@@ -48,7 +48,7 @@ DEFAULTS = {
         },
         "named": {
             "install": True,
-            "packages": ["bind"],
+            "packages": ["bind9"],
         },
         "nftables": {
             "install": True,
