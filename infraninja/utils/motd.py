@@ -34,7 +34,7 @@ def get_last_access():
         pass
     return None
 
-def show_motd(hostname=None, group=None, project=None):
+def show_motd(hostname=None, group=None, project=None, skip_initial=False):
     """Display an enhanced Message of the Day when infraninja starts."""
     messages = [
         "Welcome to InfraNinja - Your Infrastructure at Your Command 🥷",
@@ -46,8 +46,9 @@ def show_motd(hostname=None, group=None, project=None):
     current_time = datetime.now()
     border = "=" * 70
     
-    # Save current access
-    save_access_history(hostname, group, project)
+    # Always save access history if we have host info
+    if hostname:
+        save_access_history(hostname, group, project)
     
     # Get last access info
     last_access = get_last_access()
@@ -64,7 +65,7 @@ def show_motd(hostname=None, group=None, project=None):
     if project:
         print(f"Project: {project}")
         
-    if last_access and last_access['last_access'] != current_time.isoformat():
+    if last_access:
         last_time = datetime.fromisoformat(last_access['last_access'])
         print(f"\nLast Access: {last_time.strftime('%Y-%m-%d %H:%M:%S')}")
         if last_access.get('hostname'):

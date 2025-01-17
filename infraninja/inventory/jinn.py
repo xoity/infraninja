@@ -12,7 +12,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-show_motd()
+# Load last access data and show initial MOTD
+show_motd(skip_initial=False)
 
 def get_groups_from_data(data):
     """Extract unique groups from server data."""
@@ -127,15 +128,6 @@ def fetch_servers(
             if server.get("group", {}).get("name_en") in selected_groups
             and server.get("is_active", False)  # Only active servers
         ]
-
-        # Show MOTD with context for first server in selection
-        if len(hosts) > 0:
-            first_host = hosts[0]
-            show_motd(
-                hostname=first_host[0],
-                group=first_host[1].get('group_name'),
-                project=first_host[1].get('project', 'Default')
-            )
 
         return hosts
 
