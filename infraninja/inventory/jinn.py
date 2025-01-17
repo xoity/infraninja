@@ -4,6 +4,7 @@ import logging
 import paramiko
 import requests
 from typing import Dict, Any, List, Tuple
+from infraninja.utils.motd import show_motd
 
 logging.basicConfig(
     level=logging.INFO,
@@ -11,6 +12,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+show_motd()
 
 def get_groups_from_data(data):
     """Extract unique groups from server data."""
