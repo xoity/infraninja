@@ -1,6 +1,6 @@
 import pyinfra
 from pyinfra.api import deploy
-from infraninja.security.ubuntu.install_tools import install_security_tools as task1
+from infraninja.security.common.acl import acl_setup as task1
 
 
 @deploy("Test Security Setup")
