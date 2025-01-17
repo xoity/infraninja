@@ -129,7 +129,6 @@ def fetch_servers(access_key: str, selected_group: str = None) -> List[Tuple[str
 
 
 access_key = input("Please enter your access key: ")
-global inventory_api_url, ssh_config_url
 inventory_api_url = input("Please enter the URL to list inventory: ")
 ssh_config_url = input("Please enter the URL for SSH config: ")
 hosts = fetch_servers(access_key)
