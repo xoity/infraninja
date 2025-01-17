@@ -66,11 +66,10 @@ def show_motd(hostname=None, group=None, project=None, skip_initial=False):
         print(f"Project: {project}")
         
     if last_access:
-        last_time = datetime.fromisoformat(last_access['last_access'])
-        print(f"\nLast Access: {last_time.strftime('%Y-%m-%d %H:%M:%S')}")
+        print("\nlast jinn access:")
         if last_access.get('hostname'):
-            print(f"Last Host: {last_access['hostname']}")
+            print(f"hostname: {last_access['hostname']}")
         if last_access.get('group'):
-            print(f"Last Group: {last_access['group']}")
+            print(f"group: {last_access['group']}")
             
     print(f"{border}\n")
