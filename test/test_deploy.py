@@ -1,6 +1,7 @@
 import pyinfra
 from pyinfra.api import deploy
 from infraninja.security.common.smtp_hardening import smtp_hardening as task2
+from infraninja.security.common.acl import acl_setup as task1
 
 
 @deploy("Test Security Setup")
