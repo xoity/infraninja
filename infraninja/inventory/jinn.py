@@ -12,6 +12,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+SSH_CONFIG_ENDPOINT = "/ssh-tools/ssh-config/?bastionless=true"
+INVENTORY_ENDPOINT = "/inventory/servers/"
 
 def get_groups_from_data(data):
     """Extract unique groups from server data."""
@@ -23,11 +25,11 @@ def get_groups_from_data(data):
     return sorted(list(groups))
 
 
-def fetch_ssh_config(access_key: str) -> str:
+def fetch_ssh_config(access_key: str, base_url: str) -> str:
     """Fetch SSH configuration from API."""
     headers = {"Authentication": access_key}
     response = requests.get(
-        ssh_config_url,
+        f"{base_url.rstrip('/')}{SSH_CONFIG_ENDPOINT}",
         headers=headers
     )
     return response.text
@@ -61,14 +63,17 @@ def is_key_protected(key_path):
         raise ValueError(f"Error reading key: {e}")
 
 
-def fetch_servers(access_key: str, selected_group: str = None) -> List[Tuple[str, Dict[str, Any]]]:
+def fetch_servers(access_key: str, base_url: str, selected_group: str = None) -> List[Tuple[str, Dict[str, Any]]]:
     try:
         # Fetch and parse SSH configs
-        ssh_configs = parse_ssh_config(fetch_ssh_config(access_key))
+        ssh_configs = parse_ssh_config(fetch_ssh_config(access_key, base_url))
         
-        # Existing API call for servers
+        # API call for servers
         headers = {"Authentication": access_key}
-        response = requests.get(inventory_api_url, headers=headers)
+        response = requests.get(
+            f"{base_url.rstrip('/')}{INVENTORY_ENDPOINT}",
+            headers=headers
+        )
         response.raise_for_status()
         data = response.json()
 
@@ -145,10 +150,9 @@ def fetch_servers(access_key: str, selected_group: str = None) -> List[Tuple[str
 key_path = "/home/xoity/.ssh/id_rsa"
 
 access_key = input("Please enter your access key: ")
-inventory_api_url = input("Please enter the URL to list inventory: ")
-ssh_config_url = input("Please enter the URL for SSH config: ")
+base_url = input("Please enter the Jinn API base URL: ")  # e.g. https://jinn-api.kalvad.cloud
 ssh_keypass = is_key_protected(key_path)
-hosts = fetch_servers(access_key)
+hosts = fetch_servers(access_key, base_url)
 
 logger.info("\nSelected servers:")
 for hostname, attrs in hosts:
