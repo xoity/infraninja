@@ -126,15 +126,6 @@ def fetch_servers(access_key: str, base_url: str, selected_group: str = None) ->
                     "ssh_paramiko_connect_kwargs": {
                         "key_filename": ssh_configs.get(server["ssh_hostname"], {}).get("IdentityFile"),
                         "passphrase": ssh_keypass,
-                        "sock": paramiko.ProxyCommand(
-                            ssh_configs.get(server["ssh_hostname"], {}).get(
-                                "ProxyCommand", ""
-                            )
-                        )
-                        if ssh_configs.get(server["ssh_hostname"], {}).get(
-                            "ProxyCommand"
-                        )
-                        else None,
                     },
                     "group_name": server.get("group", {}).get("name_en"),
                     **{
