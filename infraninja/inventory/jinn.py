@@ -1,8 +1,9 @@
-# invetory || jinn.py
+# inventory || jinn.py
 
 import logging
 import paramiko
 import requests
+import getpass
 from typing import Dict, Any, List, Tuple
 
 logging.basicConfig(
@@ -46,6 +47,18 @@ def parse_ssh_config(config_text: str) -> Dict[str, Dict[str, str]]:
             key, value = line.strip().split(None, 1)
             configs[current_host][key] = value
     return configs
+
+def is_key_protected(key_path):
+    """Check if the private key is encrypted and return the passphrase if required."""
+    try:
+        # Attempt to load the key without a passphrase
+        paramiko.RSAKey.from_private_key_file(key_path)
+        return None  # No passphrase needed
+    except paramiko.PasswordRequiredException:
+        # Prompt for passphrase if key is encrypted
+        return getpass.getpass("Please enter the password for the private key: ")
+    except Exception as e:
+        raise ValueError(f"Error reading key: {e}")
 
 
 def fetch_servers(access_key: str, selected_group: str = None) -> List[Tuple[str, Dict[str, Any]]]:
@@ -98,8 +111,10 @@ def fetch_servers(access_key: str, selected_group: str = None) -> List[Tuple[str
                     **server.get("attributes", {}),
                     "ssh_user": ssh_configs.get(server["ssh_hostname"], {}).get("User", server.get("ssh_user")),
                     "is_active": server.get("is_active", False),
+                    # Include passphrase in connection parameters
                     "ssh_paramiko_connect_kwargs": {
                         "key_filename": ssh_configs.get(server["ssh_hostname"], {}).get("IdentityFile"),
+                        "passphrase": ssh_keypass,
                         "sock": paramiko.ProxyCommand(
                             ssh_configs.get(server["ssh_hostname"], {}).get("ProxyCommand", "")
                         ) if ssh_configs.get(server["ssh_hostname"], {}).get("ProxyCommand") else None
@@ -127,10 +142,12 @@ def fetch_servers(access_key: str, selected_group: str = None) -> List[Tuple[str
         logger.error("An unexpected error occurred: %s", e)
         return []
 
+key_path = "/home/xoity/.ssh/id_rsa"
 
 access_key = input("Please enter your access key: ")
 inventory_api_url = input("Please enter the URL to list inventory: ")
 ssh_config_url = input("Please enter the URL for SSH config: ")
+ssh_keypass = is_key_protected(key_path)
 hosts = fetch_servers(access_key)
 
 logger.info("\nSelected servers:")
