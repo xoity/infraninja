@@ -165,7 +165,7 @@ def fetch_servers(access_key: str, base_url: str, selected_group: str = None) ->
 key_path = os.path.expanduser("~/.ssh/id_rsa")
 
 access_key = input("Please enter your access key: ")
-base_url = input("Please enter the Jinn API base URL: ")  # e.g. https://jinn-api.kalvad.cloud
+base_url = input("Please enter the Jinn API base URL: ")  
 ssh_keypass = is_key_protected(key_path)
 hosts = fetch_servers(access_key, base_url)
 
