@@ -16,7 +16,6 @@ logger = logging.getLogger(__name__)
 
 show_motd(skip_initial=False)
 
-SSH_CONFIG_ENDPOINT = "/ssh-tools/ssh-config/?bastionless=true"
 INVENTORY_ENDPOINT = "/inventory/servers/"
 
 def get_groups_from_data(data):
@@ -28,31 +27,6 @@ def get_groups_from_data(data):
             groups.add(group)
     return sorted(list(groups))
 
-
-def fetch_ssh_config(access_key: str, base_url: str) -> str:
-    """Fetch SSH configuration from API."""
-    headers = {"Authentication": access_key}
-    response = requests.get(
-        f"{base_url.rstrip('/')}{SSH_CONFIG_ENDPOINT}",
-        headers=headers
-    )
-    return response.text
-
-
-def parse_ssh_config(config_text: str) -> Dict[str, Dict[str, str]]:
-    """Parse SSH config text into dictionary."""
-    configs = {}
-    current_host = None
-
-    for line in config_text.splitlines():
-        line = line.strip()
-        if line.startswith("Host ") and not line.startswith("Host *"):
-            current_host = line.split()[1]
-            configs[current_host] = {}
-        elif current_host and "    " in line:
-            key, value = line.strip().split(None, 1)
-            configs[current_host][key] = value
-    return configs
 
 def is_key_protected(key_path):
     """Check if the private key is encrypted and return the passphrase if required."""
@@ -69,9 +43,6 @@ def is_key_protected(key_path):
 
 def fetch_servers(access_key: str, base_url: str, selected_group: str = None) -> List[Tuple[str, Dict[str, Any]]]:
     try:
-        # Fetch and parse SSH configs
-        ssh_configs = parse_ssh_config(fetch_ssh_config(access_key, base_url))
-        
         # API call for servers
         headers = {"Authentication": access_key}
         response = requests.get(
@@ -118,13 +89,10 @@ def fetch_servers(access_key: str, base_url: str, selected_group: str = None) ->
                 server["ssh_hostname"],
                 {
                     **server.get("attributes", {}),
-                    "ssh_user": ssh_configs.get(server["ssh_hostname"], {}).get(
-                        "User", server.get("ssh_user")
-                    ),
+                    "ssh_user": server.get("ssh_user"),
                     "is_active": server.get("is_active", False),
-                    # Include passphrase in connection parameters
                     "ssh_paramiko_connect_kwargs": {
-                        "key_filename": ssh_configs.get(server["ssh_hostname"], {}).get("IdentityFile"),
+                        "key_filename": os.path.expanduser("~/.ssh/id_rsa"),
                         "passphrase": ssh_keypass,
                     },
                     "group_name": server.get("group", {}).get("name_en"),
