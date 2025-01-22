@@ -13,6 +13,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+show_motd(skip_initial=False)
+
 SSH_CONFIG_ENDPOINT = "/ssh-tools/ssh-config/?bastionless=true"
 INVENTORY_ENDPOINT = "/inventory/servers/"
 
