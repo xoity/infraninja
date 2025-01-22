@@ -5,6 +5,7 @@ import paramiko
 import requests
 import getpass
 from typing import Dict, Any, List, Tuple
+from infraninja.utils.motd import show_motd
 
 logging.basicConfig(
     level=logging.INFO,
@@ -39,13 +40,13 @@ def parse_ssh_config(config_text: str) -> Dict[str, Dict[str, str]]:
     """Parse SSH config text into dictionary."""
     configs = {}
     current_host = None
-    
+
     for line in config_text.splitlines():
         line = line.strip()
-        if line.startswith('Host ') and not line.startswith('Host *'):
+        if line.startswith("Host ") and not line.startswith("Host *"):
             current_host = line.split()[1]
             configs[current_host] = {}
-        elif current_host and '    ' in line:
+        elif current_host and "    " in line:
             key, value = line.strip().split(None, 1)
             configs[current_host][key] = value
     return configs
@@ -109,20 +110,28 @@ def fetch_servers(access_key: str, base_url: str, selected_group: str = None) ->
             selected_groups = [selected_group]
 
         # Filter servers by selected groups
-        return [
+        hosts = [
             (
                 server["ssh_hostname"],
                 {
                     **server.get("attributes", {}),
-                    "ssh_user": ssh_configs.get(server["ssh_hostname"], {}).get("User", server.get("ssh_user")),
+                    "ssh_user": ssh_configs.get(server["ssh_hostname"], {}).get(
+                        "User", server.get("ssh_user")
+                    ),
                     "is_active": server.get("is_active", False),
                     # Include passphrase in connection parameters
                     "ssh_paramiko_connect_kwargs": {
                         "key_filename": ssh_configs.get(server["ssh_hostname"], {}).get("IdentityFile"),
                         "passphrase": ssh_keypass,
                         "sock": paramiko.ProxyCommand(
-                            ssh_configs.get(server["ssh_hostname"], {}).get("ProxyCommand", "")
-                        ) if ssh_configs.get(server["ssh_hostname"], {}).get("ProxyCommand") else None
+                            ssh_configs.get(server["ssh_hostname"], {}).get(
+                                "ProxyCommand", ""
+                            )
+                        )
+                        if ssh_configs.get(server["ssh_hostname"], {}).get(
+                            "ProxyCommand"
+                        )
+                        else None,
                     },
                     "group_name": server.get("group", {}).get("name_en"),
                     **{
@@ -136,6 +145,8 @@ def fetch_servers(access_key: str, base_url: str, selected_group: str = None) ->
             if server.get("group", {}).get("name_en") in selected_groups
             and server.get("is_active", False)  # Only active servers
         ]
+
+        return hosts
 
     except requests.exceptions.RequestException as e:
         logger.error("An error occurred while making the request: %s", e)
