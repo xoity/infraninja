@@ -1,5 +1,6 @@
 # inventory || jinn.py
 
+import os
 import logging
 import paramiko
 import requests
@@ -160,7 +161,8 @@ def fetch_servers(access_key: str, base_url: str, selected_group: str = None) ->
         logger.error("An unexpected error occurred: %s", e)
         return []
 
-key_path = "/home/xoity/.ssh/id_rsa"
+#use the os import to get the .ssh key path
+key_path = os.path.expanduser("~/.ssh/id_rsa")
 
 access_key = input("Please enter your access key: ")
 base_url = input("Please enter the Jinn API base URL: ")  # e.g. https://jinn-api.kalvad.cloud
