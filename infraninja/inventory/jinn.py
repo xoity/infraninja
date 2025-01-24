@@ -18,6 +18,7 @@ show_motd(skip_initial=False)
 
 INVENTORY_ENDPOINT = "/inventory/servers/"
 
+
 def get_groups_from_data(data):
     """Extract unique groups from server data."""
     groups = set()
@@ -41,13 +42,14 @@ def is_key_protected(key_path):
         raise ValueError(f"Error reading key: {e}")
 
 
-def fetch_servers(access_key: str, base_url: str, selected_group: str = None) -> List[Tuple[str, Dict[str, Any]]]:
+def fetch_servers(
+    access_key: str, base_url: str, selected_group: str = None
+) -> List[Tuple[str, Dict[str, Any]]]:
     try:
         # API call for servers
         headers = {"Authentication": access_key}
         response = requests.get(
-            f"{base_url.rstrip('/')}{INVENTORY_ENDPOINT}",
-            headers=headers
+            f"{base_url.rstrip('/')}{INVENTORY_ENDPOINT}", headers=headers
         )
         response.raise_for_status()
         data = response.json()
@@ -116,11 +118,12 @@ def fetch_servers(access_key: str, base_url: str, selected_group: str = None) ->
         logger.error("An unexpected error occurred: %s", e)
         return []
 
-#use the os import to get the .ssh key path
+
+# use the os import to get the .ssh key path
 key_path = os.path.expanduser("~/.ssh/id_rsa")
 
 access_key = input("Please enter your access key: ")
-base_url = input("Please enter the Jinn API base URL: ")  
+base_url = input("Please enter the Jinn API base URL: ")
 ssh_keypass = is_key_protected(key_path)
 hosts = fetch_servers(access_key, base_url)
 
