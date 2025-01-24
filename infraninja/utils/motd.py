@@ -74,7 +74,8 @@ def format_motd() -> str:
     current_time = datetime.now()
     
     content = [
-        "\n=" * 70,
+        "\n",
+        "=" * 70,
         "🥷 InfraNinja System Management",
         "=" * 70,
         f"\nCurrent Time: {current_time.strftime('%Y-%m-%d %H:%M:%S')}"
