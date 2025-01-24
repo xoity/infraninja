@@ -2,11 +2,11 @@
 
 import os
 import logging
+import paramiko
 import requests
-from typing import Dict, Any, List
-from infraninja.utils.motd import show_motd
 import getpass
-from paramiko import RSAKey, PasswordRequiredException
+from typing import Dict, Any, List, Tuple
+from infraninja.utils.motd import show_motd
 
 logging.basicConfig(
     level=logging.INFO,
@@ -27,9 +27,23 @@ def get_groups_from_data(data):
             groups.add(group)
     return sorted(list(groups))
 
-def fetch_servers(access_key: str, base_url: str, selected_group: str = None) -> List[Dict[str, Any]]:
-    """Fetch servers and return structured inventory data."""
+
+def is_key_protected(key_path):
+    """Check if the private key is encrypted and return the passphrase if required."""
     try:
+        # Attempt to load the key without a passphrase
+        paramiko.RSAKey.from_private_key_file(key_path)
+        return None  # No passphrase needed
+    except paramiko.PasswordRequiredException:
+        # Prompt for passphrase if key is encrypted
+        return getpass.getpass("Please enter the password for the private key: ")
+    except Exception as e:
+        raise ValueError(f"Error reading key: {e}")
+
+
+def fetch_servers(access_key: str, base_url: str, selected_group: str = None) -> List[Tuple[str, Dict[str, Any]]]:
+    try:
+        # API call for servers
         headers = {"Authentication": access_key}
         response = requests.get(
             f"{base_url.rstrip('/')}{INVENTORY_ENDPOINT}",
@@ -38,110 +52,78 @@ def fetch_servers(access_key: str, base_url: str, selected_group: str = None) ->
         response.raise_for_status()
         data = response.json()
 
+        # First, display available groups
         groups = get_groups_from_data(data)
         logger.info("\nAvailable groups:")
         for i, group in enumerate(groups, 1):
             logger.info("%d. %s", i, group)
 
+        # If no group is selected, prompt for selection
         if selected_group is None:
             while True:
-                choice = input("\nEnter group numbers (space-separated) or '*' for all groups: ").strip()
+                choice = input(
+                    "\nEnter group numbers (space-separated) or '*' for all groups: "
+                ).strip()
                 if choice == "*":
                     selected_groups = groups
                     break
                 try:
+                    # Split input and convert to integers
                     choices = [int(x) for x in choice.split()]
+                    # Validate all choices
                     if all(1 <= x <= len(groups) for x in choices):
                         selected_groups = [groups[i - 1] for i in choices]
                         break
                     logger.warning("Invalid choice. Please select valid numbers.")
                 except ValueError:
                     logger.warning("Please enter valid numbers or '*'.")
+
             logger.info("\nSelected groups: %s", ", ".join(selected_groups))
+
         else:
             selected_groups = [selected_group]
 
-        inventory = []
-        for server in data.get("result", []):
-            if (server.get("group", {}).get("name_en") in selected_groups and 
-                server.get("is_active", False)):
-                
-                bastion = server.get("bastion")
-                server_data = {
-                    "ssh_hostname": server["ssh_hostname"],
-                    "ssh_user": server["ssh_user"],
-                    "ssh_port": server["ssh_port"],
-                    "group_name": server["group"]["name_en"],
+        # Filter servers by selected groups
+        hosts = [
+            (
+                server["ssh_hostname"],
+                {
+                    **server.get("attributes", {}),
+                    "ssh_user": server.get("ssh_user"),
                     "is_active": server.get("is_active", False),
-                    "bastion": None
-                }
+                    "group_name": server.get("group", {}).get("name_en"),
+                    **{
+                        key: value
+                        for key, value in server.items()
+                        if key not in ["attributes", "ssh_user", "is_active", "group"]
+                    },
+                },
+            )
+            for server in data.get("result", [])
+            if server.get("group", {}).get("name_en") in selected_groups
+            and server.get("is_active", False)  # Only active servers
+        ]
 
-                if bastion:
-                    server_data["bastion"] = {
-                        "hostname": bastion["hostname"],
-                        "port": bastion["port"],
-                        "ssh_user": bastion["ssh_user"]
-                    }
-
-                inventory.append(server_data)
-
-        return inventory
+        return hosts
 
     except requests.exceptions.RequestException as e:
-        logger.error("Request error: %s", e)
+        logger.error("An error occurred while making the request: %s", e)
+        return []
+    except KeyError as e:
+        logger.error("Error parsing response: %s", e)
         return []
     except Exception as e:
-        logger.error("Unexpected error: %s", e)
+        logger.error("An unexpected error occurred: %s", e)
         return []
 
-# Get access key and API URL
-access_key = input("Please enter your access key: ")
-base_url = input("Please enter the Jinn API base URL: ")
-
-# Check SSH key
+#use the os import to get the .ssh key path
 key_path = os.path.expanduser("~/.ssh/id_rsa")
-ssh_key_password = None
 
-if os.path.exists(key_path):
-    try:
-        RSAKey.from_private_key_file(key_path)
-        logger.info("\nSSH key is not encrypted.")
-    except PasswordRequiredException:
-        ssh_key_password = getpass.getpass("\nEnter passphrase for encrypted SSH key: ")
-    except Exception as e:
-        logger.error("Error loading SSH key: %s", e)
-else:
-    logger.warning("SSH key not found at %s", key_path)
-    key_path = None
-
-# Fetch hosts and format inventory for PyInfra
+access_key = input("Please enter your access key: ")
+base_url = input("Please enter the Jinn API base URL: ")  
+ssh_keypass = is_key_protected(key_path)
 hosts = fetch_servers(access_key, base_url)
 
-formatted_hosts = []
-for server in hosts:
-    bastion_config = {}
-    if server["bastion"]:
-        bastion_config = {
-            "ssh_hostname": server["bastion"]["hostname"],
-            "ssh_port": server["bastion"]["port"],
-            "ssh_user": server["bastion"]["ssh_user"]
-        }
-
-    formatted_hosts.append((
-        server["ssh_hostname"],
-        {
-            "ssh_user": server["ssh_user"],
-            "ssh_key": key_path,
-            "ssh_key_password": ssh_key_password,
-            "ssh_port": server["ssh_port"],
-            "bastion": bastion_config
-        }
-    ))
-
 logger.info("\nSelected servers:")
-for hostname, attrs in formatted_hosts:
+for hostname, attrs in hosts:
     logger.info("- %s (User: %s)", hostname, attrs["ssh_user"])
-    if attrs["bastion"]:
-        logger.info("  ↳ Via bastion: %s:%d", 
-                   attrs["bastion"]["ssh_hostname"], 
-                   attrs["bastion"]["ssh_port"])
