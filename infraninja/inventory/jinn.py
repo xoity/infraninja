@@ -2,9 +2,7 @@
 
 import os
 import logging
-import paramiko
 import requests
-import getpass
 from typing import Dict, Any, List, Tuple
 from infraninja.utils.motd import show_motd
 
@@ -27,20 +25,6 @@ def get_groups_from_data(data):
         if group:
             groups.add(group)
     return sorted(list(groups))
-
-
-def is_key_protected(key_path):
-    """Check if the private key is encrypted and return the passphrase if required."""
-    try:
-        # Attempt to load the key without a passphrase
-        paramiko.RSAKey.from_private_key_file(key_path)
-        return None  # No passphrase needed
-    except paramiko.PasswordRequiredException:
-        # Prompt for passphrase if key is encrypted
-        return getpass.getpass("Please enter the password for the private key: ")
-    except Exception as e:
-        raise ValueError(f"Error reading key: {e}")
-
 
 def fetch_servers(
     access_key: str, base_url: str, selected_group: str = None
@@ -94,6 +78,7 @@ def fetch_servers(
                     "ssh_user": server.get("ssh_user"),
                     "is_active": server.get("is_active", False),
                     "group_name": server.get("group", {}).get("name_en"),
+                    "ssh_key": key_path,
                     **{
                         key: value
                         for key, value in server.items()
@@ -124,7 +109,6 @@ key_path = os.path.expanduser("~/.ssh/id_rsa")
 
 access_key = input("Please enter your access key: ")
 base_url = input("Please enter the Jinn API base URL: ")
-ssh_keypass = is_key_protected(key_path)
 hosts = fetch_servers(access_key, base_url)
 
 logger.info("\nSelected servers:")
