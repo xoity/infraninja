@@ -26,6 +26,7 @@ def get_groups_from_data(data):
             groups.add(group)
     return sorted(list(groups))
 
+
 def fetch_servers(
     access_key: str, base_url: str, selected_group: str = None
 ) -> List[Tuple[str, Dict[str, Any]]]:
@@ -72,7 +73,7 @@ def fetch_servers(
         # Filter servers by selected groups
         hosts = [
             (
-                server["ssh_hostname"],
+                server["hostname"],
                 {
                     **server.get("attributes", {}),
                     "ssh_user": server.get("ssh_user"),
@@ -82,13 +83,21 @@ def fetch_servers(
                     **{
                         key: value
                         for key, value in server.items()
-                        if key not in ["attributes", "ssh_user", "is_active", "group"]
+                        # Exclude keys that override SSH config
+                        if key
+                        not in [
+                            "attributes",
+                            "ssh_user",
+                            "is_active",
+                            "group",
+                            "ssh_hostname",  # ADD THIS LINE
+                        ]
                     },
                 },
             )
             for server in data.get("result", [])
             if server.get("group", {}).get("name_en") in selected_groups
-            and server.get("is_active", False)  # Only active servers
+            and server.get("is_active", False)
         ]
 
         return hosts
