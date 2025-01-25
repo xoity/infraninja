@@ -25,4 +25,5 @@ def acl_setup():
         server.shell(
             name=f"Set ACL for {path}",
             commands=[f"setfacl -m {acl_rule} {path}"],
+            _ignore_errors=True,
         )

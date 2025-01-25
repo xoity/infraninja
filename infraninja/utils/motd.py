@@ -10,6 +10,7 @@ MOTD_FILE = "/etc/motd"
 MAX_HISTORY = 5
 
 
+
 class InfraNinjaHistory:
     DEFAULT_DATA = {
         "last_access": None,

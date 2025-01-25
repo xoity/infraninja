@@ -1,9 +1,12 @@
 # inventory || jinn.py
+# inventory || jinn.py
 
+import os
 import os
 import logging
 import requests
 from typing import Dict, Any, List, Tuple
+from pathlib import Path
 from pathlib import Path
 from infraninja.utils.motd import show_motd
 
@@ -21,6 +24,8 @@ def get_groups_from_data(data):
     """Extract unique groups from server data."""
     groups = set()
     for server in data.get("result", []):
+        if server.get("group", {}).get("name_en"):
+            groups.add(server["group"]["name_en"])
         if server.get("group", {}).get("name_en"):
             groups.add(server["group"]["name_en"])
     return sorted(list(groups))
@@ -112,8 +117,10 @@ def configure_ssh_settings(server: dict) -> dict:
 
 def fetch_servers(
     access_key: str, base_url: str, selected_group: str = None
+    access_key: str, base_url: str, selected_group: str = None
 ) -> List[Tuple[str, Dict[str, Any]]]:
     try:
+        # API call for servers
         # API call for servers
         headers = {"Authentication": access_key}
         response = requests.get(
@@ -125,7 +132,13 @@ def fetch_servers(
         data = response.json()
 
         # Get groups
+        # Get groups
         groups = get_groups_from_data(data)
+        if not groups:
+            logger.error("No groups found in API response")
+            return []
+
+        # Group selection logic
         if not groups:
             logger.error("No groups found in API response")
             return []
@@ -134,13 +147,17 @@ def fetch_servers(
         logger.info("\nAvailable groups:")
         for i, group in enumerate(groups, 1):
             logger.info(f"{i}. {group}")
+            logger.info(f"{i}. {group}")
 
+        selected_groups = [selected_group] if selected_group else []
+        if not selected_groups:
         selected_groups = [selected_group] if selected_group else []
         if not selected_groups:
             while True:
                 choice = input(
                     "\nEnter group numbers (space-separated) or '*' for all groups: "
                 ).strip()
+                if choice == "*" or choice == "":
                 if choice == "*" or choice == "":
                     selected_groups = groups
                     break
@@ -153,6 +170,7 @@ def fetch_servers(
                 except ValueError:
                     logger.warning("Please enter valid numbers or '*'.")
 
+        logger.info("\nSelected groups: %s", ", ".join(selected_groups))
         logger.info("\nSelected groups: %s", ", ".join(selected_groups))
 
         # Update MOTD with selected groups
@@ -193,13 +211,17 @@ def fetch_servers(
 
     except requests.exceptions.RequestException as e:
         logger.error(f"API request failed: {str(e)}")
+        logger.error(f"API request failed: {str(e)}")
         return []
     except Exception as e:
+        logger.error(f"Critical error: {str(e)}")
         logger.error(f"Critical error: {str(e)}")
         return []
 
 
 access_key = input("Please enter your access key: ")
+base_url = input("Please enter the Jinn API base URL: ")
+hosts = fetch_servers(access_key, base_url)
 base_url = input("Please enter the Jinn API base URL: ")
 hosts = fetch_servers(access_key, base_url)
 
