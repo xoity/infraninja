@@ -90,7 +90,7 @@ def fetch_servers(
                             "ssh_user",
                             "is_active",
                             "group",
-                            "ssh_hostname",  # ADD THIS LINE
+                            "ssh_hostname",  
                         ]
                     },
                 },
