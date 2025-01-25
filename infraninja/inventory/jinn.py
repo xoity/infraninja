@@ -13,7 +13,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-show_motd(skip_initial=False)
+show_motd()
 
 INVENTORY_ENDPOINT = "/inventory/servers/"
 EXCLUDED_FILES = {"config", "known_hosts", "authorized_keys", "environment"}
@@ -151,6 +151,8 @@ def fetch_servers(
                     logger.warning("Please enter valid numbers or '*'.")
 
         logger.info("\nSelected groups: %s", ", ".join(selected_groups))
+
+        show_motd(selected_groups=selected_groups)
 
         # Build host list
         hosts = []
