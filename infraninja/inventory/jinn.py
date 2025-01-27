@@ -192,6 +192,7 @@ def fetch_servers(
 
         # Update MOTD data without displaying it
         from infraninja.utils.motd import motd
+
         motd.update_access(selected_groups, server_names)
 
         return hosts
