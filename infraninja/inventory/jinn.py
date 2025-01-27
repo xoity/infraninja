@@ -21,7 +21,6 @@ SSH_CONFIG_DIR = os.path.expanduser("~/.ssh/config.d")
 MAIN_SSH_CONFIG = os.path.expanduser("~/.ssh/config")
 
 
-
 def get_groups_from_data(data):
     """Extract unique groups from server data."""
     groups = set()
@@ -111,6 +110,7 @@ def configure_ssh_settings(server: dict) -> dict:
 
     return config
 
+
 def fetch_ssh_config(base_url: str, api_key: str, bastionless: bool = True) -> str:
     """
     Fetch the SSH config from the API using an API key for authentication and return its content.
@@ -118,7 +118,9 @@ def fetch_ssh_config(base_url: str, api_key: str, bastionless: bool = True) -> s
     headers = {"Authentication": api_key}
     endpoint = f"{base_url.rstrip('/')}{SSH_CONFIG_ENDPOINT}"
     try:
-        response = requests.get(endpoint, headers=headers, params={"bastionless": bastionless}, timeout=10)
+        response = requests.get(
+            endpoint, headers=headers, params={"bastionless": bastionless}, timeout=10
+        )
         response.raise_for_status()
         return response.text
     except requests.RequestException as e:
