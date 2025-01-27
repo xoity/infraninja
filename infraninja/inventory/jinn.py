@@ -5,7 +5,7 @@ import logging
 import requests
 from typing import Dict, Any, List, Tuple
 from pathlib import Path
-from infraninja.utils.motd import show_motd
+from infraninja.utils.motd import motd
 
 logging.basicConfig(
     level=logging.INFO,
@@ -13,7 +13,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-show_motd()
 
 INVENTORY_ENDPOINT = "/inventory/servers/"
 EXCLUDED_FILES = {"config", "known_hosts", "authorized_keys", "environment"}
@@ -152,10 +151,10 @@ def fetch_servers(
 
         logger.info("\nSelected groups: %s", ", ".join(selected_groups))
 
-        show_motd(selected_groups=selected_groups)
-
         # Build host list
         hosts = []
+        server_names = []  # Add this line to track server names
+
         for server in data.get("result", []):
             try:
                 if not all(
@@ -169,9 +168,11 @@ def fetch_servers(
 
                 ssh_config = configure_ssh_settings(server)
 
+                hostname = server["hostname"]
+                server_names.append(hostname)  # Add this line to collect server names
                 hosts.append(
                     (
-                        server["hostname"],
+                        hostname,
                         {
                             "ssh_user": server.get("ssh_user"),
                             "ssh_key": ssh_config["ssh_key"],
@@ -189,6 +190,10 @@ def fetch_servers(
                 logger.error(f"Skipping {server.get('hostname')}: {str(e)}")
                 continue
 
+        # Update MOTD data without displaying it
+        from infraninja.utils.motd import motd
+        motd.update_access(selected_groups, server_names)
+
         return hosts
 
     except requests.exceptions.RequestException as e:
@@ -199,6 +204,10 @@ def fetch_servers(
         return []
 
 
+# Show MOTD first
+motd.display_motd()
+
+# Get credentials and fetch servers
 access_key = input("Please enter your access key: ")
 base_url = input("Please enter the Jinn API base URL: ")
 hosts = fetch_servers(access_key, base_url)
