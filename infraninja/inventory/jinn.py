@@ -3,7 +3,8 @@
 import os
 import logging
 import requests
-from typing import Dict, Any, List, Tuple
+import time
+from typing import Dict, Any, List, Tuple, Optional
 from pathlib import Path
 from infraninja.utils.motd import motd
 
@@ -135,6 +136,7 @@ def save_ssh_config(config_content: str, filename: str) -> None:
     config_path = os.path.join(SSH_CONFIG_DIR, filename)
     with open(config_path, "w") as file:
         file.write(config_content)
+    print("")
     logger.info(f"Saved SSH config to: {config_path}")
 
 
@@ -214,7 +216,7 @@ def fetch_servers(
                 ssh_config = configure_ssh_settings(server)
 
                 hostname = server["hostname"]
-                server_names.append(hostname)  # Add this line to collect server names
+                server_names.append(hostname)
                 hosts.append(
                     (
                         hostname,
@@ -235,9 +237,6 @@ def fetch_servers(
                 logger.error(f"Skipping {server.get('hostname')}: {str(e)}")
                 continue
 
-        # Update MOTD data without displaying it
-        from infraninja.utils.motd import motd
-
         motd.update_access(selected_groups, server_names)
 
         return hosts
@@ -250,20 +249,68 @@ def fetch_servers(
         return []
 
 
+def get_valid_filename(default_name: str = "bastionless_ssh_config") -> str:
+    """Get a valid filename from user input."""
+    while True:
+        filename = input(f"Enter filename for SSH config [default: {default_name}]: ").strip()
+        if not filename:
+            return default_name
+        
+        # Remove any directory components for security
+        filename = os.path.basename(filename)
+        
+        # Check if filename is valid
+        if not all(c.isalnum() or c in '-_.' for c in filename):
+            logger.warning("Filename contains invalid characters. Use only letters, numbers, dots, hyphens, and underscores.")
+            continue
+        
+        return filename
+
+
+def clear_screen() -> None:
+    """Clear the terminal screen."""
+    os.system('clear' if os.name == 'posix' else 'cls')
+
+def refresh_display(delay: Optional[float] = None) -> None:
+    """Clear screen, show MOTD, and optionally wait."""
+    if delay:
+        time.sleep(delay)
+    clear_screen()
+    motd.display_motd()
+
 # Show MOTD first
+clear_screen()
 motd.display_motd()
 
 # Get credentials and fetch servers
-access_key = input("Please enter your access key: ")
-base_url = input("Please enter the Jinn API base URL: ")
-ssh_config = fetch_ssh_config(base_url, access_key, bastionless=True)
-save_ssh_config(ssh_config, "bastionless_ssh_config")
-update_main_ssh_config()
-hosts = fetch_servers(access_key, base_url)
+try:
+    access_key = input("Please enter your access key: ")
+    base_url = input("Please enter the Jinn API base URL: ")
+    ssh_config = fetch_ssh_config(base_url, access_key, bastionless=True)
+    
+    if ssh_config:
+        filename = get_valid_filename()
+        save_ssh_config(ssh_config, filename)
+        logger.info("SSH configuration setup is complete.")
+        
+        # Wait and refresh before group selection
+        refresh_display(2)
+    
+    # Fetch and select groups
+    hosts = fetch_servers(access_key, base_url)
+    
+    # Wait and refresh before SSH key selection
+    refresh_display(0)
+    
+    if not hosts:
+        logger.error("No valid hosts found. Check the API response and try again.")
+    else:
+        # Wait and refresh before showing final connection info
+        refresh_display(0)
+        logger.info("\nSelected servers:")
+        for hostname, attrs in hosts:
+            logger.info("- %s (User: %s)", hostname, attrs["ssh_user"])
+        logger.info("--> Connecting to hosts...")
 
-if not hosts:
-    logger.error("No valid hosts found. Check the API response and try again.")
-else:
-    logger.info("\nSelected servers:")
-    for hostname, attrs in hosts:
-        logger.info("- %s (User: %s)", hostname, attrs["ssh_user"])
+except Exception as e:
+    logger.error(f"An error occurred: {str(e)}")
