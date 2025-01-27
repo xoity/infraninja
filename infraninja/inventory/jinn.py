@@ -15,7 +15,11 @@ logger = logging.getLogger(__name__)
 
 
 INVENTORY_ENDPOINT = "/inventory/servers/"
+SSH_CONFIG_ENDPOINT = "/ssh-tools/ssh-config/?bastionless=true"
 EXCLUDED_FILES = {"config", "known_hosts", "authorized_keys", "environment"}
+SSH_CONFIG_DIR = os.path.expanduser("~/.ssh/config.d")
+MAIN_SSH_CONFIG = os.path.expanduser("~/.ssh/config")
+
 
 
 def get_groups_from_data(data):
@@ -106,6 +110,45 @@ def configure_ssh_settings(server: dict) -> dict:
         config["ssh_port"] = server["ssh_port"]
 
     return config
+
+def fetch_ssh_config(base_url: str, api_key: str, bastionless: bool = True) -> str:
+    """
+    Fetch the SSH config from the API using an API key for authentication and return its content.
+    """
+    headers = {"Authentication": api_key}
+    endpoint = f"{base_url.rstrip('/')}{SSH_CONFIG_ENDPOINT}"
+    try:
+        response = requests.get(endpoint, headers=headers, params={"bastionless": bastionless}, timeout=10)
+        response.raise_for_status()
+        return response.text
+    except requests.RequestException as e:
+        raise RuntimeError(f"Failed to fetch SSH config: {str(e)}")
+
+
+def save_ssh_config(config_content: str, filename: str) -> None:
+    """
+    Save the SSH config content to a file in the SSH config directory.
+    """
+    os.makedirs(SSH_CONFIG_DIR, exist_ok=True)
+    config_path = os.path.join(SSH_CONFIG_DIR, filename)
+    with open(config_path, "w") as file:
+        file.write(config_content)
+    logger.info(f"Saved SSH config to: {config_path}")
+
+
+def update_main_ssh_config():
+    """
+    Ensure the main .ssh/config includes the SSH config directory.
+    """
+    include_line = f"Include {SSH_CONFIG_DIR}/*\n"
+    if os.path.exists(MAIN_SSH_CONFIG):
+        with open(MAIN_SSH_CONFIG, "r") as file:
+            if include_line in file.read():
+                return  # Already included
+
+    with open(MAIN_SSH_CONFIG, "a") as file:
+        file.write(include_line)
+    logger.info(f"Updated main SSH config to include: {SSH_CONFIG_DIR}/*")
 
 
 def fetch_servers(
@@ -211,6 +254,9 @@ motd.display_motd()
 # Get credentials and fetch servers
 access_key = input("Please enter your access key: ")
 base_url = input("Please enter the Jinn API base URL: ")
+ssh_config = fetch_ssh_config(base_url, access_key, bastionless=True)
+save_ssh_config(ssh_config, "bastionless_ssh_config")
+update_main_ssh_config()
 hosts = fetch_servers(access_key, base_url)
 
 if not hosts:
