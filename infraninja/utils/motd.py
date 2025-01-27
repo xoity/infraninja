@@ -47,12 +47,16 @@ class MOTDManager:
 
     def display_motd(self):
         """Display formatted MOTD information."""
-        print("\n========= Welcome to InfraNinja =========")
+        border = "=" * 70
+        print(f"\n{border}")
+        print("🥷 InfraNinja System Management")
+        print(f"{border}\n")
+        
         print(f"Current time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         
         if not self.motd_data["last_run"]:
             print("No previous access recorded.")
-            print("=====================================\n")
+            print(f"\n{border}")
             return
 
         last_run = datetime.fromisoformat(self.motd_data["last_run"])
@@ -67,7 +71,9 @@ class MOTDManager:
             print("\nRecently accessed servers:")
             for server in self.motd_data["recent_servers"]:
                 print(f"  - {server}")
-        print("=====================================\n")
+        
+        print(f"\n{border}")
+        print("\n")
 
 # Create global instance
 motd = MOTDManager()
