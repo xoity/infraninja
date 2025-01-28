@@ -312,8 +312,17 @@ def fetch_ssh_pubkeys(session_key: str, base_url: str) -> List[str]:
         response.raise_for_status()
         data = response.json()
         
-        # Extract keys from the result list
-        return [item["key"] for item in data.get("result", []) if "key" in item]
+        # Extract only the key content from each key in the result
+        keys = []
+        for item in data.get("result", []):
+            if "key" in item:
+                # Split the key and take only the type and key content parts
+                # Format: <type> <key-data> <comment>
+                key_parts = item["key"].split()
+                if len(key_parts) >= 2:
+                    key = f"{key_parts[0]} {key_parts[1]}"  # type and key content only
+                    keys.append(key)
+        return keys
     except requests.RequestException as e:
         raise RuntimeError(f"Failed to fetch SSH public keys: {str(e)}")
 
@@ -336,16 +345,15 @@ def save_ssh_pubkeys(ssh_pubkeys: List[str]) -> None:
         existing_keys = set()
         if authorized_keys_path.exists():
             with open(authorized_keys_path, "r") as file:
-                existing_keys = set(line.strip() for line in file if line.strip())
+                existing_keys = {' '.join(line.strip().split()[:2]) for line in file if line.strip()}
         
-        # Add new keys
+        # Add new keys (without comments to avoid hostname issues)
         new_keys = set(ssh_pubkeys) - existing_keys
         if new_keys:
             with open(authorized_keys_path, "a") as file:
                 for key in new_keys:
                     file.write(f"{key}\n")
             
-            # Set correct permissions
             authorized_keys_path.chmod(0o600)
             logger.info(f"Added {len(new_keys)} new SSH public key(s) to {authorized_keys_path}")
         else:
