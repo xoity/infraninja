@@ -1,7 +1,7 @@
 import pyinfra
 from pyinfra.api import deploy
 
-from infraninja.security.common.update_packages import system_update as task1
+from infraninja.utils.motd import motd as task1
 
 
 @deploy("Test Security Setup")

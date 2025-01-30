@@ -3,11 +3,8 @@
 import os
 import logging
 import requests
-import getpass
-import time
-from typing import Dict, Any, List, Tuple, Optional
+from typing import Dict, Any, List, Tuple
 from pathlib import Path
-from infraninja.utils.motd import motd
 
 logging.basicConfig(
     level=logging.INFO,
@@ -239,8 +236,6 @@ def fetch_servers(
                 logger.error(f"Skipping {server.get('hostname')}: {str(e)}")
                 continue
 
-        motd.update_access(selected_groups, server_names)
-
         return hosts
 
     except requests.exceptions.RequestException as e:
@@ -273,115 +268,16 @@ def clear_screen() -> None:
     """Clear the terminal screen."""
     os.system('clear' if os.name == 'posix' else 'cls')
 
-def refresh_display(delay: Optional[float] = None) -> None:
-    """Clear screen, show MOTD, and optionally wait."""
-    if delay:
-        time.sleep(delay)
-    clear_screen()
-    motd.display_motd()
-
-#create a login function that takes in the base url and username and passwords as fields for the body of the request, which then returns the session key, parse the value of that ant return it 
-
-def login(base_url: str, username: str, password: str) -> str:
-    """
-    Login to the Jinn API using the provided username and password and return the session key.
-    """
-    url = f"{base_url.rstrip('/')}{LOGIN_ENDPOINT}"
-    payload = {"username": username, "password": password}
-    try:
-        response = requests.post(url, json=payload, timeout=10)
-        response.raise_for_status()
-        return response.json().get("session_key")
-    except requests.RequestException as e:
-        raise RuntimeError(f"Failed to login: {str(e)}")
-
- 
-#create a fetch ssh_pubkeys function which takes in a session key and base url, the session key value is used to authenticate the request, the function should return the response in json format
-
-def fetch_ssh_pubkeys(session_key: str, base_url: str) -> List[str]:
-    """
-    Fetch the SSH public keys from the API using a session key for authentication.
-    Returns a list of SSH public key strings.
-    """
-    headers = {"Authorization": f"Bearer {session_key}"}
-    cookies = {"sessionid": session_key}
-
-    endpoint = f"{base_url.rstrip('/')}/ssh-tools/ssh-keylist"
-    try:
-        response = requests.get(endpoint, headers=headers, cookies=cookies, timeout=10)
-        response.raise_for_status()
-        data = response.json()
-        
-        # Extract only the key content from each key in the result
-        keys = []
-        for item in data.get("result", []):
-            if "key" in item:
-                # Split the key and take only the type and key content parts
-                # Format: <type> <key-data> <comment>
-                key_parts = item["key"].split()
-                if len(key_parts) >= 2:
-                    key = f"{key_parts[0]} {key_parts[1]}"  # type and key content only
-                    keys.append(key)
-        return keys
-    except requests.RequestException as e:
-        raise RuntimeError(f"Failed to fetch SSH public keys: {str(e)}")
-
-def save_ssh_pubkeys(ssh_pubkeys: List[str]) -> None:
-    """
-    Save the SSH public keys to the authorized_keys file in the user's .ssh directory.
-    """
-    if not ssh_pubkeys:
-        logger.warning("No SSH public keys found to save")
-        return
-
-    ssh_dir = Path.home() / ".ssh"
-    authorized_keys_path = ssh_dir / "authorized_keys"
-    
-    # Create .ssh directory if it doesn't exist
-    ssh_dir.mkdir(mode=0o700, exist_ok=True)
-    
-    try:
-        # Read existing keys if file exists
-        existing_keys = set()
-        if authorized_keys_path.exists():
-            with open(authorized_keys_path, "r") as file:
-                existing_keys = {' '.join(line.strip().split()[:2]) for line in file if line.strip()}
-        
-        # Add new keys (without comments to avoid hostname issues)
-        new_keys = set(ssh_pubkeys) - existing_keys
-        if new_keys:
-            with open(authorized_keys_path, "a") as file:
-                for key in new_keys:
-                    file.write(f"{key}\n")
-            
-            authorized_keys_path.chmod(0o600)
-            logger.info(f"Added {len(new_keys)} new SSH public key(s) to {authorized_keys_path}")
-        else:
-            logger.info("No new SSH public keys to add")
-            
-    except Exception as e:
-        raise RuntimeError(f"Failed to save SSH public keys: {str(e)}")
 
 # Show MOTD first
 clear_screen()
-motd.display_motd()
 
 # Get credentials and fetch servers
 try:
-    username = input("Please enter your username: ")
-    password = getpass.getpass("Please enter your password: ")
-
-    print("")
 
     access_key = input("Please enter your access key: ")
     base_url = input("Please enter the Jinn API base URL: ")
 
-    # Login to get session key
-    session_key = login(base_url, username, password)
-
-    # Fetch and save SSH public keys
-    ssh_pubkeys = fetch_ssh_pubkeys(session_key, base_url)
-    save_ssh_pubkeys(ssh_pubkeys)
 
     ssh_config = fetch_ssh_config(base_url, access_key, bastionless=True)
     
@@ -390,20 +286,16 @@ try:
         save_ssh_config(ssh_config, filename)
         logger.info("SSH configuration setup is complete.")
         
-        # Wait and refresh before group selection
-        refresh_display(2)
+
     
     # Fetch and select groups
     hosts = fetch_servers(access_key, base_url)
     
     # Wait and refresh before SSH key selection
-    refresh_display(0)
-    
+
     if not hosts:
         logger.error("No valid hosts found. Check the API response and try again.")
     else:
-        # Wait and refresh before showing final connection info
-        refresh_display(0)
         logger.info("\nSelected servers:")
         for hostname, attrs in hosts:
             logger.info("- %s (User: %s)", hostname, attrs["ssh_user"])
