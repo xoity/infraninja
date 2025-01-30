@@ -1,7 +1,7 @@
 import pyinfra
 from pyinfra.api import deploy
 
-from infraninja.utils.motd import motd as task1
+from infraninja.utils.pubkeys import main as task1
 
 
 @deploy("Test Security Setup")
