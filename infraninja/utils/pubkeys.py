@@ -15,14 +15,22 @@ def main():
 
     username = input("Enter your Jinn Username: ")
     password = getpass.getpass("Enter your Jinn Password: ")
-    base_url = input("Enter the base URL of the Jinn API: ")
+    base_url = input("Enter the base URL of the Jinn API:")
 
 
 
     try:
         url_login = f"{base_url.rstrip('/')}/login"
-        headers = {"username": username, "password": password}
-        response = requests.post(url_login, headers=headers, timeout=10)
+        login_data = {
+            "username": username,
+            "password": password
+        }
+        response = requests.post(
+            url_login, 
+            json=login_data,  
+            headers={"Content-Type": "application/json"},
+            timeout=10
+        )
         response.raise_for_status()
             
         session_data = response.json()
@@ -83,12 +91,6 @@ def main():
 
     except Exception as e:
         raise RuntimeError(f"Failed to append keys: {str(e)}")
-
-if __name__ == "__main__":
-     main()
-
-
-
 
 
 
