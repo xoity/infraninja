@@ -65,7 +65,7 @@ def get_ssh_key(server_data: dict) -> str:
     if len(found_keys) > 1:
         logger.info("\nDiscovered SSH keys:")
         for i, key in enumerate(found_keys, 1):
-            logger.info(f"{i}. {key}")
+            logger.info("%d. %s", i, key)
         while True:
             choice = input("Select key to use (number) or 'cancel' to abort: ").strip()
             if choice.lower() == "cancel":
@@ -101,7 +101,7 @@ def configure_ssh_settings(server: dict) -> dict:
     try:
         config["ssh_key"] = get_ssh_key(server)
     except Exception as e:
-        logger.error(f"SSH key error for {server['hostname']}: {str(e)}")
+        logger.error("SSH key error for %s: %s", server['hostname'], str(e))
         raise
 
     # Port configuration
@@ -124,7 +124,7 @@ def fetch_ssh_config(base_url: str, api_key: str, bastionless: bool = True) -> s
         response.raise_for_status()
         return response.text
     except requests.RequestException as e:
-        raise RuntimeError(f"Failed to fetch SSH config: {str(e)}")
+        raise RuntimeError("Failed to fetch SSH config: %s" % str(e))
 
 
 def save_ssh_config(config_content: str, filename: str) -> None:
@@ -136,7 +136,7 @@ def save_ssh_config(config_content: str, filename: str) -> None:
     with open(config_path, "w") as file:
         file.write(config_content)
     print("")
-    logger.info(f"Saved SSH config to: {config_path}")
+    logger.info("Saved SSH config to: %s", config_path)
 
 
 def update_main_ssh_config():
@@ -151,7 +151,7 @@ def update_main_ssh_config():
 
     with open(MAIN_SSH_CONFIG, "a") as file:
         file.write(include_line)
-    logger.info(f"Updated main SSH config to include: {SSH_CONFIG_DIR}/*")
+    logger.info("Updated main SSH config to include: %s/*", SSH_CONFIG_DIR)
 
 
 def fetch_servers(
@@ -175,7 +175,7 @@ def fetch_servers(
         # Group selection logic
         logger.info("\nAvailable groups:")
         for i, group in enumerate(groups, 1):
-            logger.info(f"{i}. {group}")
+            logger.info("%d. %s", i, group)
 
         selected_groups = [selected_group] if selected_group else []
         if not selected_groups:
@@ -230,19 +230,19 @@ def fetch_servers(
                 )
 
             except KeyError as e:
-                logger.error(f"Skipping server due to missing key: {str(e)}")
+                logger.error("Skipping server due to missing key: %s", str(e))
                 continue
             except Exception as e:
-                logger.error(f"Skipping {server.get('hostname')}: {str(e)}")
+                logger.error("Skipping %s: %s", server.get('hostname'), str(e))
                 continue
 
         return hosts
 
     except requests.exceptions.RequestException as e:
-        logger.error(f"API request failed: {str(e)}")
+        logger.error("API request failed: %s", str(e))
         return []
     except Exception as e:
-        logger.error(f"Critical error: {str(e)}")
+        logger.error("Critical error: %s", str(e))
         return []
 
 
@@ -305,4 +305,4 @@ try:
         logger.info("--> Connecting to hosts...")
 
 except Exception as e:
-    logger.error(f"An error occurred: {str(e)}")
+    logger.error("An error occurred: %s", str(e))
