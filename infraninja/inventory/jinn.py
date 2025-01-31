@@ -281,6 +281,9 @@ try:
     access_key = input("Please enter your access key: ")
     base_url = input("Please enter the Jinn API base URL: ")
 
+    # Set environment variable for base_url
+    os.environ["JINN_API_BASE_URL"] = base_url
+
     ssh_config = fetch_ssh_config(base_url, access_key, bastionless=True)
 
     if ssh_config:

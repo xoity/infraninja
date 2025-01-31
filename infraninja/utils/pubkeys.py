@@ -1,16 +1,29 @@
+import os
 import requests
 import getpass
 from pyinfra.operations import server
 from pyinfra.api import deploy
 from pyinfra import host
 from pyinfra.facts.server import User, Users
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(message)s",
+)
+logger = logging.getLogger(__name__)
 
 
 @deploy("Add SSH keys to authorized_keys")
 def add_ssh_keys():
+    # Get base_url from environment variable
+    base_url = os.getenv("JINN_API_BASE_URL")
+    if not base_url:
+        logger.error("Error: JINN_API_BASE_URL environment variable not set")
+        return False
+
     username = input("Enter username: ")
     password = getpass.getpass("Enter password: ")
-    base_url = input("Enter base API URL: ")
 
     login_endpoint = f"{base_url}/login/"
     login_data = {"username": username, "password": password}
