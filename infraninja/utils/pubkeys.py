@@ -1,81 +1,85 @@
 import requests
 import getpass
-from pyinfra.operations import files
-from pyinfra import host
-import logging
+from pyinfra.operations import server
 from pyinfra.api import deploy
+from pyinfra import host
+from pyinfra.facts.server import User, Users
 
+@deploy("Add SSH keys to authorized_keys")
+def add_ssh_keys():
+    username = input("Enter username: ")
+    password = getpass.getpass("Enter password: ")
+    base_url = input("Enter base API URL: ")
 
-logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
-logger = logging.getLogger(__name__)
-
-@deploy("Fetch and append SSH keys")
-def main():
-
-    username = input("Enter your Jinn Username: ")
-    password = getpass.getpass("Enter your Jinn Password: ")
-    base_url = input("Enter the base URL of the Jinn API:")
-
-
-    url_login = f"{base_url.rstrip('/')}/login"
-    payload = {
+    login_endpoint = f"{base_url}/login/"
+    login_data = {
         "username": username,
         "password": password
     }
-    response = requests.post(
-        url_login, 
-        json=payload,  
-        timeout=10
-    )
-    response.raise_for_status()
+
+    headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    }
+
+    try:
+        response = requests.post(login_endpoint, json=login_data, headers=headers)
+        
+        if response.status_code != 200:
+            print(f"Login failed: {response.text}")
+            return
+        
+        response_data = response.json()
+        session_key = response_data.get('session_key')
+        
+        if not session_key:
+            print("Error: Session key missing in response.")
+            return
+
+        auth_headers = {
+            'Authorization': f'Bearer {session_key}',
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
+
+        cookies = {
+            'sessionid': session_key
+        }
+
+        ssh_endpoint = f"{base_url}/ssh-tools/ssh-keylist/"
+        ssh_response = requests.get(ssh_endpoint, headers=auth_headers, cookies=cookies)
+
+        if ssh_response.status_code != 200:
+            print(f"Failed to retrieve SSH keys: {ssh_response.text}")
+            return
+
+        ssh_data = ssh_response.json()
+
+        try:
+            # Get current user details using proper fact classes
+            current_user = host.get_fact(User)
+            user_details = host.get_fact(Users)[current_user]
             
-    session_data = response.json()
-    session_key = session_data.get('session_key')
+            # Extract public keys from response
+            public_keys = [key_data['key'] for key_data in ssh_data['result']]
 
+            # Add keys using server operation
+            server.user_authorized_keys(
+                name=f"Add SSH keys for {current_user}",
+                user=current_user,
+                group=user_details['group'],
+                public_keys=public_keys,
+                delete_keys=False, 
+            )
 
-    url_pubkeys = f"{base_url.rstrip('/')}/ssh-tools/ssh-keylist"
-    headers = {"Authorization": f"Bearer {session_key}"}
-    cookies = {"session_key": session_key}
-    response = requests.get(url_pubkeys, cookies=cookies, headers=headers, timeout=10)
-    response.raise_for_status()
-            
-    data = response.json()
-    pubkey = data.get('result', [])
-    
+        except (KeyError, AttributeError) as e:
+            print(f"Error getting user details: {e}")
+            return False
+        except Exception as e:
+            print(f"Error setting up SSH keys: {e}")
+            return False
 
-    """Append SSH keys to authorized_keys file using pyinfra"""
+        return True
 
-    auth_keys_file = "~/.ssh/authorized_keys"
-            
-    # Ensure .ssh directory exists with correct permissions
-    files.directory(
-        name="Ensure .ssh directory exists",
-        path="~/.ssh",
-        mode=700,
-        user=host.get_fact('user'),
-        group=host.get_fact('group')
-    )
-
-    # Extract and format keys
-    key_strings = []
-    for key_data in pubkey:
-        if key_data.get('key'):
-            key_strings.append(f"{key_data['key']} # {key_data.get('label', 'No label')}")
-
-    if not key_strings:
-        logger.warning("No valid keys found to append")
-                
-
-        # Append keys to authorized_keys file
-        files.line(
-            name="Append SSH keys to authorized_keys",
-            path=auth_keys_file,
-            mode=600,
-            lines=key_strings,
-            present=True
-        )
-
-        logger.info(f"Successfully appended {len(key_strings)} keys to {auth_keys_file}")
-
-
-
+    except requests.exceptions.RequestException as e:
+        print(f"Error occurred: {e}")
