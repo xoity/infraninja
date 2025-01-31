@@ -183,7 +183,7 @@ def fetch_servers(
                 choice = input(
                     "\nEnter group numbers (space-separated) or '*' for all groups: "
                 ).strip()
-                if choice == "*" or choice == "":
+                if choice in ("*", ""):
                     selected_groups = groups
                     break
                 try:
