@@ -249,24 +249,28 @@ def fetch_servers(
 def get_valid_filename(default_name: str = "bastionless_ssh_config") -> str:
     """Get a valid filename from user input."""
     while True:
-        filename = input(f"Enter filename for SSH config [default: {default_name}]: ").strip()
+        filename = input(
+            f"Enter filename for SSH config [default: {default_name}]: "
+        ).strip()
         if not filename:
             return default_name
-        
+
         # Remove any directory components for security
         filename = os.path.basename(filename)
-        
+
         # Check if filename is valid
-        if not all(c.isalnum() or c in '-_.' for c in filename):
-            logger.warning("Filename contains invalid characters. Use only letters, numbers, dots, hyphens, and underscores.")
+        if not all(c.isalnum() or c in "-_." for c in filename):
+            logger.warning(
+                "Filename contains invalid characters. Use only letters, numbers, dots, hyphens, and underscores."
+            )
             continue
-        
+
         return filename
 
 
 def clear_screen() -> None:
     """Clear the terminal screen."""
-    os.system('clear' if os.name == 'posix' else 'cls')
+    os.system("clear" if os.name == "posix" else "cls")
 
 
 # Show MOTD first
@@ -274,23 +278,19 @@ clear_screen()
 
 # Get credentials and fetch servers
 try:
-
     access_key = input("Please enter your access key: ")
     base_url = input("Please enter the Jinn API base URL: ")
 
-
     ssh_config = fetch_ssh_config(base_url, access_key, bastionless=True)
-    
+
     if ssh_config:
         filename = get_valid_filename()
         save_ssh_config(ssh_config, filename)
         logger.info("SSH configuration setup is complete.")
-        
 
-    
     # Fetch and select groups
     hosts = fetch_servers(access_key, base_url)
-    
+
     # Wait and refresh before SSH key selection
 
     if not hosts:
