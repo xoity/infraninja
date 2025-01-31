@@ -284,8 +284,8 @@ try:
     if ssh_config:
         filename = get_valid_filename()
         save_ssh_config(ssh_config, filename)
+        update_main_ssh_config()  # Add this line to ensure the config is included
         logger.info("SSH configuration setup is complete.")
-        
 
     
     # Fetch and select groups
