@@ -223,7 +223,7 @@ def fetch_servers(
                             "ssh_user": server.get("ssh_user"),
                             "ssh_key": ssh_config["ssh_key"],
                             "_ssh_proxy_command": ssh_config.get("_ssh_proxy_command"),
-                            "ssh_port": server.get("ssh_port", 22),
+                            "ssh_port": server["ssh_port"],
                             **server.get("attributes", {}),
                         },
                     )
