@@ -101,7 +101,7 @@ def configure_ssh_settings(server: dict) -> dict:
     try:
         config["ssh_key"] = get_ssh_key(server)
     except Exception as e:
-        logger.error("SSH key error for %s: %s", server['hostname'], str(e))
+        logger.error("SSH key error for %s: %s", server["hostname"], str(e))
         raise
 
     # Port configuration
@@ -143,7 +143,7 @@ def update_main_ssh_config():
     """
     Ensure the main .ssh/config includes the SSH config directory.
     """
-    include_line = f"Include {SSH_CONFIG_DIR}/*\n"
+    include_line = f"\nInclude {SSH_CONFIG_DIR}/*\n"
     if os.path.exists(MAIN_SSH_CONFIG):
         with open(MAIN_SSH_CONFIG, "r") as file:
             if include_line in file.read():
@@ -199,7 +199,7 @@ def fetch_servers(
 
         # Build host list
         hosts = []
-        server_names = []  # Add this line to track server names
+        server_names = []
 
         for server in data.get("result", []):
             try:
@@ -233,7 +233,7 @@ def fetch_servers(
                 logger.error("Skipping server due to missing key: %s", str(e))
                 continue
             except Exception as e:
-                logger.error("Skipping %s: %s", server.get('hostname'), str(e))
+                logger.error("Skipping %s: %s", server.get("hostname"), str(e))
                 continue
 
         return hosts
