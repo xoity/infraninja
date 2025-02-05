@@ -143,7 +143,7 @@ def update_main_ssh_config():
     """
     Ensure the main .ssh/config includes the SSH config directory.
     """
-    include_line = f"Include {SSH_CONFIG_DIR}/*\n"
+    include_line = f"\nInclude {SSH_CONFIG_DIR}/*\n"
     if os.path.exists(MAIN_SSH_CONFIG):
         with open(MAIN_SSH_CONFIG, "r") as file:
             if include_line in file.read():
