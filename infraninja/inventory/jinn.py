@@ -17,6 +17,7 @@ SSH_CONFIG_DIR = os.path.expanduser("~/.ssh/config.d")
 SSH_CONFIG_ENDPOINT = "/ssh-tools/ssh-config/?bastionless=true"
 MAIN_SSH_CONFIG = os.path.expanduser("~/.ssh/config")
 
+
 def get_groups_from_data(data):
     """Extract unique groups from server data."""
     groups = set()
@@ -26,6 +27,7 @@ def get_groups_from_data(data):
             groups.add(group)
     return sorted(list(groups))
 
+
 def get_tags_from_data(servers: List[Dict]) -> List[str]:
     """Extract unique tags from server data."""
     tags = set()
@@ -34,6 +36,7 @@ def get_tags_from_data(servers: List[Dict]) -> List[str]:
             if tag and not tag.isspace():  # Skip empty or whitespace-only tags
                 tags.add(tag)
     return sorted(list(tags))
+
 
 def fetch_ssh_config(base_url: str, api_key: str, bastionless: bool = True) -> str:
     """
@@ -99,13 +102,15 @@ def get_valid_filename(default_name: str = "bastionless_ssh_config") -> str:
 
         return filename
 
-def fetch_servers(access_key: str, base_url: str, selected_group: str = None) -> List[Tuple[str, Dict[str, Any]]]:
+
+def fetch_servers(
+    access_key: str, base_url: str, selected_group: str = None
+) -> List[Tuple[str, Dict[str, Any]]]:
     try:
         # API call for servers
         headers = {"Authentication": access_key}
         response = requests.get(
-            f"{base_url.rstrip('/')}{INVENTORY_ENDPOINT}",
-            headers=headers
+            f"{base_url.rstrip('/')}{INVENTORY_ENDPOINT}", headers=headers
         )
         response.raise_for_status()
         data = response.json()
@@ -143,7 +148,8 @@ def fetch_servers(access_key: str, base_url: str, selected_group: str = None) ->
 
         # Filter servers by selected groups first
         filtered_servers = [
-            server for server in data.get("result", [])
+            server
+            for server in data.get("result", [])
             if server.get("group", {}).get("name_en") in selected_groups
             and server.get("is_active", False)
         ]
@@ -154,16 +160,21 @@ def fetch_servers(access_key: str, base_url: str, selected_group: str = None) ->
             logger.info("\nAvailable tags:")
             for i, tag in enumerate(tags, 1):
                 logger.info(f"{i}. {tag}")
-            
-            tag_choice = input("\nSelect tags (space-separated), '*' or Enter for all: ").strip()
-            
-            if tag_choice and tag_choice != '*':
+
+            tag_choice = input(
+                "\nSelect tags (space-separated), '*' or Enter for all: "
+            ).strip()
+
+            if tag_choice and tag_choice != "*":
                 try:
                     selected_indices = [int(i) - 1 for i in tag_choice.split()]
-                    selected_tags = {tags[i] for i in selected_indices if 0 <= i < len(tags)}
+                    selected_tags = {
+                        tags[i] for i in selected_indices if 0 <= i < len(tags)
+                    }
                     # Filter servers by tags
                     filtered_servers = [
-                        server for server in filtered_servers
+                        server
+                        for server in filtered_servers
                         if any(tag in selected_tags for tag in server.get("tags", []))
                     ]
                 except (ValueError, IndexError):
@@ -182,7 +193,8 @@ def fetch_servers(access_key: str, base_url: str, selected_group: str = None) ->
                     **{
                         key: value
                         for key, value in server.items()
-                        if key not in ["attributes", "ssh_user", "is_active", "group", "tags"]
+                        if key
+                        not in ["attributes", "ssh_user", "is_active", "group", "tags"]
                     },
                 },
             )
@@ -201,11 +213,12 @@ def fetch_servers(access_key: str, base_url: str, selected_group: str = None) ->
         logger.error("An unexpected error occurred: %s", e)
         return []
 
-#use the os import to get the .ssh key path
+
+# use the os import to get the .ssh key path
 key_path = os.path.expanduser("~/.ssh/id_rsa")
 
 access_key = input("Please enter your access key: ")
-base_url = input("Please enter the Jinn API base URL: ")  
+base_url = input("Please enter the Jinn API base URL: ")
 hosts = fetch_servers(access_key, base_url)
 
 
