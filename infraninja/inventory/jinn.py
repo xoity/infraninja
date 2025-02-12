@@ -12,6 +12,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+server_list = []
+
 # Configuration constants
 INVENTORY_ENDPOINT = "/inventory/servers/"
 SSH_CONFIG_DIR = os.path.expanduser("~/.ssh/config.d")
