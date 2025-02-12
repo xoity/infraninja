@@ -191,7 +191,7 @@ def fetch_servers(
         # Convert to host list format
         hosts = [
             (
-                server["ssh_hostname"],
+                server["hostname"],
                 {
                     **server.get("attributes", {}),
                     "ssh_user": server.get("ssh_user"),
