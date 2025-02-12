@@ -1,9 +1,10 @@
 # inventory || jinn.py
 
-import os
 import logging
+import os
+from typing import Any, Dict, List, Tuple
+
 import requests
-from typing import Dict, Any, List, Tuple
 
 logging.basicConfig(
     level=logging.INFO,
@@ -54,7 +55,7 @@ def fetch_ssh_config(auth_key: str, api_url: str, bastionless: bool = True) -> s
         return response.text
     except requests.RequestException as e:
         raise RuntimeError(f"Failed to fetch SSH config: {str(e)}")
-    
+
 
 def save_ssh_config(config_content: str, config_filename: str) -> None:
     """
@@ -105,7 +106,9 @@ def get_valid_filename(default_name: str = DEFAULT_SSH_CONFIG_FILENAME) -> str:
         return input_filename
 
 
-def fetch_servers(auth_key: str, api_url: str, selected_group: str = None) -> List[Tuple[str, Dict[str, Any]]]:
+def fetch_servers(
+    auth_key: str, api_url: str, selected_group: str = None
+) -> List[Tuple[str, Dict[str, Any]]]:
     try:
         # API call for servers
         headers = {"Authentication": auth_key}
@@ -124,9 +127,12 @@ def fetch_servers(auth_key: str, api_url: str, selected_group: str = None) -> Li
         # If no group is selected, prompt for selection
         if selected_group is None:
             while True:
-                choice = input(
-                    "\nEnter group numbers (space-separated) or '*' for all groups: "
-                ).strip()
+                if os.environ.get("JINN_GROUPS"):
+                    choice = os.environ.get("JINN_GROUPS").strip()
+                else:
+                    choice = input(
+                        "\nEnter group numbers (space-separated) or '*' for all groups: "
+                    ).strip()
                 if choice in ("*", ""):
                     selected_groups = groups
                     break
@@ -160,10 +166,12 @@ def fetch_servers(auth_key: str, api_url: str, selected_group: str = None) -> Li
             logger.info("\nAvailable tags:")
             for i, tag in enumerate(tags, 1):
                 logger.info("%d. %s", i, tag)
-
-            tag_choice = input(
-                "\nSelect tags (space-separated), '*' or Enter for all: "
-            ).strip()
+            if os.environ.get("JINN_TAGS"):
+                tag_choice = os.environ.get("JINN_TAGS").strip()
+            else:
+                tag_choice = input(
+                    "\nSelect tags (space-separated), '*' or Enter for all: "
+                ).strip()
 
             if tag_choice and tag_choice != "*":
                 try:
@@ -216,8 +224,14 @@ def fetch_servers(auth_key: str, api_url: str, selected_group: str = None) -> Li
 
 # Direct script execution
 try:
-    auth_key = input("Please enter your access key: ")
-    api_url = input("Please enter the Jinn API base URL: ")
+    if os.environ.get("JINN_ACCESS_KEY"):
+        auth_key = os.environ.get("JINN_ACCESS_KEY")
+    else:
+        auth_key = input("Please enter your access key: ")
+    if os.environ.get("JINN_API_URL"):
+        api_url = os.environ.get("JINN_API_URL")
+    else:
+        api_url = input("Please enter the Jinn API base URL: ")
     server_list = fetch_servers(auth_key, api_url)
 
     config_content = fetch_ssh_config(auth_key, api_url, bastionless=True)
