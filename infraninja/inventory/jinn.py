@@ -11,11 +11,13 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-
+# Configuration constants
 INVENTORY_ENDPOINT = "/inventory/servers/"
 SSH_CONFIG_DIR = os.path.expanduser("~/.ssh/config.d")
 SSH_CONFIG_ENDPOINT = "/ssh-tools/ssh-config/?bastionless=true"
 MAIN_SSH_CONFIG = os.path.expanduser("~/.ssh/config")
+DEFAULT_SSH_CONFIG_FILENAME = "bastionless_ssh_config"
+SSH_KEY_PATH = os.path.expanduser("~/.ssh/id_rsa")
 
 
 def get_groups_from_data(data):
@@ -38,12 +40,12 @@ def get_tags_from_data(servers: List[Dict]) -> List[str]:
     return sorted(list(tags))
 
 
-def fetch_ssh_config(base_url: str, api_key: str, bastionless: bool = True) -> str:
+def fetch_ssh_config(auth_key: str, api_url: str, bastionless: bool = True) -> str:
     """
     Fetch the SSH config from the API using an API key for authentication and return its content.
     """
-    headers = {"Authentication": api_key}
-    endpoint = f"{base_url.rstrip('/')}{SSH_CONFIG_ENDPOINT}"
+    headers = {"Authentication": auth_key}
+    endpoint = f"{api_url.rstrip('/')}{SSH_CONFIG_ENDPOINT}"
     try:
         response = requests.get(
             endpoint, headers=headers, params={"bastionless": bastionless}, timeout=10
@@ -51,15 +53,15 @@ def fetch_ssh_config(base_url: str, api_key: str, bastionless: bool = True) -> s
         response.raise_for_status()
         return response.text
     except requests.RequestException as e:
-        raise RuntimeError("Failed to fetch SSH config: %s" % str(e))
+        raise RuntimeError(f"Failed to fetch SSH config: {str(e)}")
+    
 
-
-def save_ssh_config(config_content: str, filename: str) -> None:
+def save_ssh_config(config_content: str, config_filename: str) -> None:
     """
     Save the SSH config content to a file in the SSH config directory.
     """
     os.makedirs(SSH_CONFIG_DIR, exist_ok=True)
-    config_path = os.path.join(SSH_CONFIG_DIR, filename)
+    config_path = os.path.join(SSH_CONFIG_DIR, config_filename)
     with open(config_path, "w") as file:
         file.write(config_content)
     print("")
@@ -81,36 +83,34 @@ def update_main_ssh_config():
     logger.info("Updated main SSH config to include: %s/*", SSH_CONFIG_DIR)
 
 
-def get_valid_filename(default_name: str = "bastionless_ssh_config") -> str:
+def get_valid_filename(default_name: str = DEFAULT_SSH_CONFIG_FILENAME) -> str:
     """Get a valid filename from user input."""
     while True:
-        filename = input(
+        input_filename = input(
             f"Enter filename for SSH config [default: {default_name}]: "
         ).strip()
-        if not filename:
+        if not input_filename:
             return default_name
 
         # Remove any directory components for security
-        filename = os.path.basename(filename)
+        input_filename = os.path.basename(input_filename)
 
         # Check if filename is valid
-        if not all(c.isalnum() or c in "-_." for c in filename):
+        if not all(c.isalnum() or c in "-_." for c in input_filename):
             logger.warning(
                 "Filename contains invalid characters. Use only letters, numbers, dots, hyphens, and underscores."
             )
             continue
 
-        return filename
+        return input_filename
 
 
-def fetch_servers(
-    access_key: str, base_url: str, selected_group: str = None
-) -> List[Tuple[str, Dict[str, Any]]]:
+def fetch_servers(auth_key: str, api_url: str, selected_group: str = None) -> List[Tuple[str, Dict[str, Any]]]:
     try:
         # API call for servers
-        headers = {"Authentication": access_key}
+        headers = {"Authentication": auth_key}
         response = requests.get(
-            f"{base_url.rstrip('/')}{INVENTORY_ENDPOINT}", headers=headers
+            f"{api_url.rstrip('/')}{INVENTORY_ENDPOINT}", headers=headers
         )
         response.raise_for_status()
         data = response.json()
@@ -159,7 +159,7 @@ def fetch_servers(
         if tags:
             logger.info("\nAvailable tags:")
             for i, tag in enumerate(tags, 1):
-                logger.info(f"{i}. {tag}")
+                logger.info("%d. %s", i, tag)
 
             tag_choice = input(
                 "\nSelect tags (space-separated), '*' or Enter for all: "
@@ -214,22 +214,25 @@ def fetch_servers(
         return []
 
 
-# use the os import to get the .ssh key path
-key_path = os.path.expanduser("~/.ssh/id_rsa")
+# Direct script execution
+try:
+    auth_key = input("Please enter your access key: ")
+    api_url = input("Please enter the Jinn API base URL: ")
+    server_list = fetch_servers(auth_key, api_url)
 
-access_key = input("Please enter your access key: ")
-base_url = input("Please enter the Jinn API base URL: ")
-hosts = fetch_servers(access_key, base_url)
+    config_content = fetch_ssh_config(auth_key, api_url, bastionless=True)
+    if config_content:
+        config_filename = get_valid_filename()
+        save_ssh_config(config_content, config_filename)
+        update_main_ssh_config()
+        logger.info("SSH configuration setup is complete.")
 
+    if not server_list:
+        logger.error("No valid hosts found. Check the API response and try again.")
+    else:
+        logger.info("\nSelected servers:")
+        for hostname, attrs in server_list:
+            logger.info("- %s (User: %s)", hostname, attrs["ssh_user"])
 
-ssh_config = fetch_ssh_config(base_url, access_key, bastionless=True)
-
-if ssh_config:
-    filename = get_valid_filename()
-    save_ssh_config(ssh_config, filename)
-    update_main_ssh_config()  # Add this line to ensure the config is included
-    logger.info("SSH configuration setup is complete.")
-
-logger.info("\nSelected servers:")
-for hostname, attrs in hosts:
-    logger.info("- %s (User: %s)", hostname, attrs["ssh_user"])
+except Exception as e:
+    logger.error("An error occurred: %s", str(e))
