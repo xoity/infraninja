@@ -26,6 +26,14 @@ def get_groups_from_data(data):
             groups.add(group)
     return sorted(list(groups))
 
+def get_tags_from_data(servers: List[Dict]) -> List[str]:
+    """Extract unique tags from server data."""
+    tags = set()
+    for server in servers:
+        for tag in server.get("tags", []):
+            if tag and not tag.isspace():  # Skip empty or whitespace-only tags
+                tags.add(tag)
+    return sorted(list(tags))
 
 def fetch_ssh_config(base_url: str, api_key: str, bastionless: bool = True) -> str:
     """
@@ -114,7 +122,7 @@ def fetch_servers(access_key: str, base_url: str, selected_group: str = None) ->
                 choice = input(
                     "\nEnter group numbers (space-separated) or '*' for all groups: "
                 ).strip()
-                if choice == "*" or choice == "":
+                if choice in ("*", ""):
                     selected_groups = groups
                     break
                 try:
@@ -133,7 +141,35 @@ def fetch_servers(access_key: str, base_url: str, selected_group: str = None) ->
         else:
             selected_groups = [selected_group]
 
-        # Filter servers by selected groups
+        # Filter servers by selected groups first
+        filtered_servers = [
+            server for server in data.get("result", [])
+            if server.get("group", {}).get("name_en") in selected_groups
+            and server.get("is_active", False)
+        ]
+
+        # Tag selection
+        tags = get_tags_from_data(filtered_servers)
+        if tags:
+            logger.info("\nAvailable tags:")
+            for i, tag in enumerate(tags, 1):
+                logger.info(f"{i}. {tag}")
+            
+            tag_choice = input("\nSelect tags (space-separated), '*' or Enter for all: ").strip()
+            
+            if tag_choice and tag_choice != '*':
+                try:
+                    selected_indices = [int(i) - 1 for i in tag_choice.split()]
+                    selected_tags = {tags[i] for i in selected_indices if 0 <= i < len(tags)}
+                    # Filter servers by tags
+                    filtered_servers = [
+                        server for server in filtered_servers
+                        if any(tag in selected_tags for tag in server.get("tags", []))
+                    ]
+                except (ValueError, IndexError):
+                    logger.warning("Invalid tag selection, showing all servers")
+
+        # Convert to host list format
         hosts = [
             (
                 server["ssh_hostname"],
@@ -142,16 +178,15 @@ def fetch_servers(access_key: str, base_url: str, selected_group: str = None) ->
                     "ssh_user": server.get("ssh_user"),
                     "is_active": server.get("is_active", False),
                     "group_name": server.get("group", {}).get("name_en"),
+                    "tags": server.get("tags", []),
                     **{
                         key: value
                         for key, value in server.items()
-                        if key not in ["attributes", "ssh_user", "is_active", "group"]
+                        if key not in ["attributes", "ssh_user", "is_active", "group", "tags"]
                     },
                 },
             )
-            for server in data.get("result", [])
-            if server.get("group", {}).get("name_en") in selected_groups
-            and server.get("is_active", False)  # Only active servers
+            for server in filtered_servers
         ]
 
         return hosts
