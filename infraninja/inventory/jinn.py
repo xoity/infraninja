@@ -43,12 +43,12 @@ def get_tags_from_data(servers: List[Dict]) -> List[str]:
     return sorted(list(tags))
 
 
-def fetch_ssh_config(auth_key: str, api_url: str, bastionless: bool = True) -> str:
+def fetch_ssh_config(api_auth_key: str, base_api_url: str, bastionless: bool = True) -> str:
     """
     Fetch the SSH config from the API using an API key for authentication and return its content.
     """
-    headers = {"Authentication": auth_key}
-    endpoint = f"{api_url.rstrip('/')}{SSH_CONFIG_ENDPOINT}"
+    headers = {"Authentication": api_auth_key}
+    endpoint = f"{base_api_url.rstrip('/')}{SSH_CONFIG_ENDPOINT}"
     try:
         response = requests.get(
             endpoint, headers=headers, params={"bastionless": bastionless}, timeout=10
@@ -59,14 +59,14 @@ def fetch_ssh_config(auth_key: str, api_url: str, bastionless: bool = True) -> s
         raise RuntimeError(f"Failed to fetch SSH config: {str(e)}")
 
 
-def save_ssh_config(config_content: str, config_filename: str) -> None:
+def save_ssh_config(ssh_config_content: str, ssh_config_filename: str) -> None:
     """
     Save the SSH config content to a file in the SSH config directory.
     """
     os.makedirs(SSH_CONFIG_DIR, exist_ok=True)
-    config_path = os.path.join(SSH_CONFIG_DIR, config_filename)
+    config_path = os.path.join(SSH_CONFIG_DIR, ssh_config_filename)
     with open(config_path, "w") as file:
-        file.write(config_content)
+        file.write(ssh_config_content)
     print("")
     logger.info("Saved SSH config to: %s", config_path)
 
@@ -109,22 +109,22 @@ def get_valid_filename(default_name: str = DEFAULT_SSH_CONFIG_FILENAME) -> str:
 
 
 def fetch_servers(
-    auth_key: str, api_url: str, selected_group: str = None
+    server_auth_key: str, server_api_url: str, selected_group: str = None
 ) -> List[Tuple[str, Dict[str, Any]]]:
     try:
         # API call for servers
-        headers = {"Authentication": auth_key}
+        headers = {"Authentication": server_auth_key}
         response = requests.get(
-            f"{api_url.rstrip('/')}{INVENTORY_ENDPOINT}", headers=headers
+            f"{server_api_url.rstrip('/')}{INVENTORY_ENDPOINT}", headers=headers
         )
         response.raise_for_status()
         data = response.json()
 
-        # First, display available groups
+        # First, display available groups sorted alphabetically
         groups = get_groups_from_data(data)
-        logger.info("\nAvailable groups:")
+        logger.info("\nAvailable groups (sorted alphabetically):")
         for i, group in enumerate(groups, 1):
-            logger.info("%d. %s", i, group)
+            logger.info("%2d. %s", i, group)  # Align numbers for better readability
 
         # If no group is selected, prompt for selection
         if selected_group is None:
@@ -162,12 +162,12 @@ def fetch_servers(
             and server.get("is_active", False)
         ]
 
-        # Tag selection
+        # Tag selection with sorted display
         tags = get_tags_from_data(filtered_servers)
         if tags:
-            logger.info("\nAvailable tags:")
+            logger.info("\nAvailable tags (sorted alphabetically):")
             for i, tag in enumerate(tags, 1):
-                logger.info("%d. %s", i, tag)
+                logger.info("%2d. %s", i, tag)  # Align numbers for better readability
             if os.environ.get("JINN_TAGS"):
                 tag_choice = os.environ.get("JINN_TAGS").strip()
             else:
