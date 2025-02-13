@@ -106,9 +106,22 @@ def get_valid_filename(default_name: str = DEFAULT_SSH_CONFIG_FILENAME) -> str:
         return input_filename
 
 
+def get_project_name(data: Dict) -> str:
+    """Extract project name from server data."""
+    if not data.get("result"):
+        return "default"
+    
+    # Get the first server that has project information
+    for server in data["result"]:
+        project = server.get("group", {}).get("project", {})
+        if project and project.get("name_en"):
+            return project["name_en"]
+    
+    return "default"
+
 def fetch_servers(
     server_auth_key: str, server_api_url: str, selected_group: str = None
-) -> List[Tuple[str, Dict[str, Any]]]:
+) -> Tuple[List[Tuple[str, Dict[str, Any]]], str]:
     try:
         # API call for servers
         headers = {"Authentication": server_auth_key}
@@ -117,6 +130,9 @@ def fetch_servers(
         )
         response.raise_for_status()
         data = response.json()
+
+        # Extract project name early
+        detected_project_name = get_project_name(data)
 
         # First, display available groups sorted alphabetically
         groups = get_groups_from_data(data)
@@ -209,17 +225,17 @@ def fetch_servers(
             for server in filtered_servers
         ]
 
-        return hosts
+        return hosts, detected_project_name
 
     except requests.exceptions.RequestException as e:
         logger.error("An error occurred while making the request: %s", e)
-        return []
+        return [], "default"
     except KeyError as e:
         logger.error("Error parsing response: %s", e)
-        return []
+        return [], "default"
     except Exception as e:
         logger.error("An unexpected error occurred: %s", e)
-        return []
+        return [], "default"
 
 
 # Direct script execution
@@ -232,11 +248,13 @@ try:
         api_url = os.environ.get("JINN_API_URL")
     else:
         api_url = input("Please enter the Jinn API base URL: ")
-    server_list = fetch_servers(auth_key, api_url)
+    
+    server_list, project_name = fetch_servers(auth_key, api_url)
 
     config_content = fetch_ssh_config(auth_key, api_url, bastionless=True)
     if config_content:
-        config_filename = get_valid_filename()
+        default_config_name = f"{project_name}_ssh_config"
+        config_filename = get_valid_filename(default_config_name)
         save_ssh_config(config_content, config_filename)
         update_main_ssh_config()
         logger.info("SSH configuration setup is complete.")
