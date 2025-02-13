@@ -12,8 +12,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-server_list = []
-
 # Configuration constants
 INVENTORY_ENDPOINT = "/inventory/servers/"
 SSH_CONFIG_DIR = os.path.expanduser("~/.ssh/config.d")
@@ -193,7 +191,7 @@ def fetch_servers(
         # Convert to host list format
         hosts = [
             (
-                server["hostname"],
+                server["ssh_hostname"],
                 {
                     **server.get("attributes", {}),
                     "ssh_user": server.get("ssh_user"),
