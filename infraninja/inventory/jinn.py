@@ -41,7 +41,9 @@ def get_tags_from_data(servers: List[Dict]) -> List[str]:
     return sorted(list(tags))
 
 
-def fetch_ssh_config(api_auth_key: str, base_api_url: str, bastionless: bool = True) -> str:
+def fetch_ssh_config(
+    api_auth_key: str, base_api_url: str, bastionless: bool = True
+) -> str:
     """
     Fetch the SSH config from the API using an API key for authentication and return its content.
     """
@@ -110,14 +112,15 @@ def get_project_name(data: Dict) -> str:
     """Extract project name from server data."""
     if not data.get("result"):
         return "default"
-    
+
     # Get the first server that has project information
     for server in data["result"]:
         project = server.get("group", {}).get("project", {})
         if project and project.get("name_en"):
             return project["name_en"]
-    
+
     return "default"
+
 
 def fetch_servers(
     server_auth_key: str, server_api_url: str, selected_group: str = None
@@ -248,7 +251,7 @@ try:
         api_url = os.environ.get("JINN_API_URL")
     else:
         api_url = input("Please enter the Jinn API base URL: ")
-    
+
     server_list, project_name = fetch_servers(auth_key, api_url)
 
     config_content = fetch_ssh_config(auth_key, api_url, bastionless=True)
