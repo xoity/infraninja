@@ -25,12 +25,6 @@ dependencies = [
 Homepage = "https://github.com/KalvadTech/infraninja"
 Issues = "https://github.com/KalvadTech/infraninja/issues"
 
-[tool.setuptools]
-packages = [
-    "infraninja",
-    "infraninja.inventory",
-    "infraninja.security",
-    "infraninja.security.common",
-    "infraninja.utils",
-    "deploy"
-]
+[tool.setuptools.packages.find]
+include = ["infraninja*"]
+namespaces = true
