@@ -1,20 +1,26 @@
+from importlib.resources import files as resource_files
 from pyinfra.api import deploy
 from pyinfra.operations import files, server
 
 
 @deploy("Lynis Setup")
 def lynis_setup():
+    template_dir = resource_files('infraninja.security.templates.ubuntu')
+    config_path = template_dir.joinpath('lynis_setup_ubuntu.j2')
+    audit_path = template_dir.joinpath('lynis_audit_script_ubuntu.j2')
+    logrotate_path = template_dir.joinpath('lynis_logrotate_ubuntu.j2')
+
     # Upload Lynis configuration file from template
     files.template(
         name="Upload Lynis configuration for detailed reporting",
-        src="../infraninja/security/templates/ubuntu/lynis_setup_ubuntu.j2",
+        src=str(config_path),
         dest="/etc/lynis/lynis.cfg",
     )
 
     # Upload the Lynis audit wrapper script from template and make it executable
     files.template(
         name="Upload Lynis audit wrapper script",
-        src="../infraninja/security/templates/ubuntu/lynis_audit_script_ubuntu.j2",
+        src=str(audit_path),
         dest="/usr/local/bin/run_lynis_audit",
         mode="755",
     )
@@ -39,6 +45,6 @@ def lynis_setup():
     # Apply log rotation settings for Lynis reports from template
     files.template(
         name="Upload Lynis logrotate configuration",
-        src="../infraninja/security/templates/ubuntu/lynis_logrotate_ubuntu.j2",
+        src=str(logrotate_path),
         dest="/etc/logrotate.d/lynis",
     )

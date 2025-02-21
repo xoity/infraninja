@@ -1,9 +1,15 @@
+from importlib.resources import files as resource_files
 from pyinfra.api import deploy
 from pyinfra.operations import files, openrc, server
 
 
 @deploy("Lynis Setup")
 def lynis_setup():
+    template_dir = resource_files("infraninja.security.templates.alpine")
+    config_path = template_dir.joinpath("lynis_setup.j2")
+    audit_path = template_dir.joinpath("lynis_audit_script.j2")
+    logrotate_path = template_dir.joinpath("lynis_logrotate.j2")
+
     # Ensure cron service is enabled and started
     openrc.service(
         name="Enable and start cron service",
@@ -15,14 +21,14 @@ def lynis_setup():
     # Upload Lynis configuration file from template
     files.template(
         name="Upload Lynis config from template",
-        src="../infraninja/security/templates/alpine/lynis_setup.j2",
+        src=str(config_path),
         dest="/etc/lynis/lynis.cfg",
     )
 
     # Upload the Lynis audit wrapper script from template and make it executable
     files.template(
         name="Upload Lynis audit wrapper script for Alpine",
-        src="../infraninja/security/templates/alpine/lynis_audit_script.j2",
+        src=str(audit_path),
         dest="/usr/local/bin/run_lynis_audit",
         mode="755",
     )
@@ -47,6 +53,6 @@ def lynis_setup():
     # Apply log rotation configuration for Lynis reports from template
     files.template(
         name="Upload Lynis logrotate configuration for Alpine",
-        src="../infraninja/security/templates/alpine/lynis_logrotate.j2",
+        src=str(logrotate_path),
         dest="/etc/logrotate.d/lynis",
     )

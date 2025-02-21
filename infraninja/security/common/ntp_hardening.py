@@ -1,12 +1,17 @@
+from importlib.resources import files as resource_files
 from pyinfra.api import deploy
 from pyinfra.operations import files, server
 
 
 @deploy("NTP Hardening")
 def ntp_hardening():
+    template_path = resource_files("infraninja.security.templates.common").joinpath(
+        "ntp.conf.j2"
+    )
+
     files.template(
         name="Upload NTP configuration",
-        src="../infraninja/security/templates/ntp.conf.j2",
+        src=str(template_path),
         dest="/etc/ntp.conf",
         user="root",
         group="root",

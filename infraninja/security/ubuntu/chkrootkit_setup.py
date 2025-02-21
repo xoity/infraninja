@@ -1,13 +1,17 @@
+from importlib.resources import files as resource_files
 from pyinfra.api import deploy
 from pyinfra.operations import files, server
 
 
 @deploy("chkrootkit Setup")
 def chkrootkit_setup():
-    # Upload the chkrootkit scan script from template and make it executable
+    template_dir = resource_files("infraninja.security.templates.ubuntu")
+    script_path = template_dir.joinpath("chkrootkit_scan_script.j2")
+    logrotate_path = template_dir.joinpath("chkrootkit_logrotate.j2")
+
     files.template(
         name="Upload chkrootkit scan script",
-        src="../infraninja/security/templates/ubuntu/chkrootkit_scan_script.j2",
+        src=str(script_path),
         dest="/usr/local/bin/run_chkrootkit_scan",
         mode="755",
     )
@@ -32,6 +36,6 @@ def chkrootkit_setup():
     # Apply log rotation settings for chkrootkit logs from template
     files.template(
         name="Upload chkrootkit logrotate configuration",
-        src="../infraninja/security/templates/ubuntu/chkrootkit_logrotate.j2",
+        src=str(logrotate_path),
         dest="/etc/logrotate.d/chkrootkit",
     )

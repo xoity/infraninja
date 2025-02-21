@@ -1,13 +1,17 @@
+from importlib.resources import files as resource_files
 from pyinfra.api import deploy
 from pyinfra.operations import files, systemd
 
 
 @deploy("Fail2Ban Setup")
 def fail2ban_setup():
-    # Upload Fail2Ban configuration file from template
+    template_path = resource_files("infraninja.security.templates.ubuntu").joinpath(
+        "fail2ban_setup_ubuntu.j2"
+    )
+
     files.template(
         name="Upload Fail2Ban configuration for Ubuntu",
-        src="../infraninja/security/templates/ubuntu/fail2ban_setup_ubuntu.j2",
+        src=str(template_path),
         dest="/etc/fail2ban/jail.local",
     )
 

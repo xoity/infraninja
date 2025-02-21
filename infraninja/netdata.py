@@ -1,3 +1,4 @@
+from importlib.resources import files as resource_files
 from pyinfra.api import deploy
 from pyinfra.operations import files, server
 
@@ -38,9 +39,12 @@ def deploy_netdata():
         present=False,  # equivalent to 'state: absent'
     )
 
+    # Get template path using importlib.resources
+    template_path = resource_files("infraninja.templates").joinpath("netdata.conf.j2")
+
     netdata_config = files.template(
         name="Template the netdata.conf file",
-        src="../templates/netdata.conf.j2",
+        src=str(template_path),
         dest="/etc/netdata/netdata.conf",
         user="root",
         group="root",

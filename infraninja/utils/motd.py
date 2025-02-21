@@ -1,3 +1,4 @@
+from importlib.resources import files as resource_files
 from pyinfra import host
 from pyinfra.operations import files, server
 from pyinfra.facts.server import Hostname
@@ -9,15 +10,13 @@ def motd():
     # Get hostname using the correct fact syntax
     hostname = host.get_fact(Hostname)
 
-    server.shell(
-        name="Update last access time",
-        commands=["last -n 1 | grep -v reboot | head -n 1 | awk '{print $4,$5,$6,$7}'"],
-    )
+    # Get template path using importlib.resources
+    template_path = resource_files("infraninja.security.templates").joinpath("motd.j2")
 
     # Create the MOTD file using template
     files.template(
         name="Deploy MOTD file",
-        src="infraninja/security/templates/motd.j2",  # Updated path
+        src=str(template_path),
         dest="/etc/motd",
         hostname=hostname,
     )

@@ -1,3 +1,4 @@
+from importlib.resources import files as resource_files
 from pyinfra import host
 from pyinfra.api import deploy
 from pyinfra.facts.server import LinuxName
@@ -8,6 +9,10 @@ os = host.get_fact(LinuxName)
 
 @deploy("nftables Setup for Alpine Linux")
 def nftables_setup_alpine():
+    template_path = resource_files("infraninja.security.templates.common").joinpath(
+        "nftables_rules.nft.j2"
+    )
+
     # Ensure the /etc/nftables directory exists
     files.directory(
         name="Create /etc/nftables directory",
@@ -18,7 +23,7 @@ def nftables_setup_alpine():
     # Upload nftables rules file
     files.template(
         name="Upload nftables rules from template",
-        src="../infraninja/security/templates/nftables_rules.nft.j2",
+        src=str(template_path),
         dest="/etc/nftables/ruleset.nft",
         mode="644",
     )
