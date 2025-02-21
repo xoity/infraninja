@@ -1,1 +1,3 @@
 pyinfra
+
+git+https://github.com/KalvadTech/infraninja.git
