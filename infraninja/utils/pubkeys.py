@@ -17,9 +17,9 @@ logger = logging.getLogger(__name__)
 @deploy("Add SSH keys to authorized_keys")
 def add_ssh_keys():
     # Get base_url from environment variable
-    base_url = os.getenv("JINN_API_BASE_URL")
+    base_url = os.getenv("JINN_API_URL")
     if not base_url:
-        logger.error("Error: JINN_API_BASE_URL environment variable not set")
+        logger.error("Error: JINN_API_URL environment variable not set")
         return False
 
     username = input("Enter username: ")
