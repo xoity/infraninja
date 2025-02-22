@@ -56,7 +56,7 @@ def fetch_ssh_config(
         response.raise_for_status()
         return response.text
     except requests.RequestException as e:
-        raise RuntimeError(f"Failed to fetch SSH config: {str(e)}")
+        raise RuntimeError("Failed to fetch SSH config: %s" % str(e))
 
 
 def save_ssh_config(ssh_config_content: str, ssh_config_filename: str) -> None:
@@ -141,7 +141,7 @@ def fetch_servers(
         groups = get_groups_from_data(data)
         logger.info("\nAvailable groups (sorted alphabetically):")
         for i, group in enumerate(groups, 1):
-            logger.info("%2d. %s", i, group)  # Align numbers for better readability
+            logger.info("%d. %s", i, group)
 
         # If no group is selected, prompt for selection
         if selected_group is None:
@@ -270,4 +270,5 @@ try:
             logger.info("- %s (User: %s)", hostname, attrs["ssh_user"])
 
 except Exception as e:
+    logger.error("An error occurred: %s", str(e))
     logger.error("An error occurred: %s", str(e))
