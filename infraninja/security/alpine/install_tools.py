@@ -50,7 +50,7 @@ def install_security_tools():
     linux_dist = host.get_fact(LinuxDistribution)
 
     is_alpine = any(
-        ["alpine" in str(name).lower() for name in [linux_name, linux_dist]]
+        "alpine" in str(name).lower() for name in [linux_name, linux_dist]
     )
 
     if not is_alpine:
