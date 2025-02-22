@@ -3,13 +3,14 @@ from pyinfra.operations import server
 from pyinfra import host
 from pyinfra.facts.files import File
 
+
 @deploy("Set ACL")
 def acl_setup():
     # Check if setfacl is available
     if not server.shell(
         name="Check if setfacl exists",
         commands=["command -v setfacl"],
-        _ignore_errors=True
+        _ignore_errors=True,
     ):
         host.noop("Skip ACL setup - setfacl not found")
         return
@@ -41,7 +42,7 @@ def acl_setup():
             server.shell(
                 name=f"Set ACL for {path}",
                 commands=[f"setfacl -m {acl_rule} {path}"],
-            _ignore_errors=True,
+                _ignore_errors=True,
             )
         except Exception as e:
             host.noop(f"Failed to set ACL for {path} - {str(e)}")

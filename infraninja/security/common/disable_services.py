@@ -18,14 +18,14 @@ def disable_useless_services_common():
                 if server.shell(
                     name=f"Check {service} status on Ubuntu",
                     commands=[f"systemctl is-active {service}"],
-                    _ignore_errors=True
+                    _ignore_errors=True,
                 ):
                     systemd.service(
                         name=f"Disable {service}",
                         service=service,
                         running=False,
                         enabled=False,
-                        _ignore_errors=True
+                        _ignore_errors=True,
                     )
                     host.noop(f"Disabled service: {service} on Ubuntu")
                 else:
@@ -38,14 +38,14 @@ def disable_useless_services_common():
                 if server.shell(
                     name=f"Check {service} status on Alpine",
                     commands=[f"rc-service {service} status"],
-                    _ignore_errors=True
+                    _ignore_errors=True,
                 ):
                     openrc.service(
                         name=f"Disable {service}",
                         service=service,
                         running=False,
                         enabled=False,
-                        _ignore_errors=True
+                        _ignore_errors=True,
                     )
                     host.noop(f"Disabled service: {service} on Alpine")
                 else:

@@ -4,6 +4,7 @@ from pyinfra.operations import files, openrc
 from pyinfra import host
 from pyinfra.facts.files import File, Directory
 
+
 @deploy("Suricata Setup")
 def suricata_setup():
     template_dir = resource_files("infraninja.security.templates.alpine")
@@ -21,7 +22,7 @@ def suricata_setup():
             name="Create Suricata config directory",
             path="/etc/suricata",
             present=True,
-            _ignore_errors=True
+            _ignore_errors=True,
         )
 
     # Upload Suricata configuration

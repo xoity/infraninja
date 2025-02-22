@@ -8,7 +8,7 @@ from pyinfra.operations import server, files
 def kernel_hardening():
     # Check if running on Linux
     linux_name = host.get_fact(LinuxName)
-    
+
     if not linux_name:
         print("[ERROR] This script requires a Linux system")
         return False
@@ -18,7 +18,6 @@ def kernel_hardening():
         name="Check if sysctl exists",
         commands=["command -v sysctl"],
     ):
-    
         print("[ERROR] sysctl command not found")
         return False
 
@@ -65,7 +64,7 @@ def kernel_hardening():
             if not server.shell(
                 name=f"Check if {key} exists",
                 commands=[f"test -f /proc/sys/{key.replace('.', '/')}"],
-                _ignore_errors=True
+                _ignore_errors=True,
             ):
                 host.noop(f"Skip {key} - parameter not supported")
                 continue
@@ -87,13 +86,15 @@ def kernel_hardening():
         server.shell(
             name="Apply sysctl settings",
             commands=["sysctl -p /etc/sysctl.d/99-security.conf"],
-            _ignore_errors=True
+            _ignore_errors=True,
         )
     except Exception as e:
         host.noop(f"Warning - Failed to apply sysctl settings: {str(e)}")
 
     if failed_settings:
-        host.noop(f"Warning - Failed to set some kernel parameters: {', '.join(failed_settings)}")
+        host.noop(
+            f"Warning - Failed to set some kernel parameters: {', '.join(failed_settings)}"
+        )
         return False
 
     host.noop("Success - Kernel hardening completed")
