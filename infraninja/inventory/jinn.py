@@ -56,7 +56,7 @@ def fetch_ssh_config(
         response.raise_for_status()
         return response.text
     except requests.RequestException as e:
-        raise RuntimeError("Failed to fetch SSH config: %s" % str(e))
+        raise RuntimeError(f"Failed to fetch SSH config: {e}")
 
 
 def save_ssh_config(ssh_config_content: str, ssh_config_filename: str) -> None:
