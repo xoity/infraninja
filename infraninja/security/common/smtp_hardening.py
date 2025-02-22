@@ -26,4 +26,5 @@ def smtp_hardening():
         service="postfix",
         running=True,
         restarted=True,
+        _ignore_errors=True,
     )
