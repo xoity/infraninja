@@ -5,10 +5,10 @@ from pyinfra.operations import files, server
 
 @deploy("Lynis Setup")
 def lynis_setup():
-    template_dir = resource_files('infraninja.security.templates.ubuntu')
-    config_path = template_dir.joinpath('lynis_setup_ubuntu.j2')
-    audit_path = template_dir.joinpath('lynis_audit_script_ubuntu.j2')
-    logrotate_path = template_dir.joinpath('lynis_logrotate_ubuntu.j2')
+    template_dir = resource_files("infraninja.security.templates.ubuntu")
+    config_path = template_dir.joinpath("lynis_setup_ubuntu.j2")
+    audit_path = template_dir.joinpath("lynis_audit_script_ubuntu.j2")
+    logrotate_path = template_dir.joinpath("lynis_logrotate_ubuntu.j2")
 
     # Upload Lynis configuration file from template
     files.template(
