@@ -271,4 +271,3 @@ try:
 
 except Exception as e:
     logger.error("An error occurred: %s", str(e))
-    logger.error("An error occurred: %s", str(e))
