@@ -50,7 +50,7 @@ def install_security_tools():
     linux_dist = host.get_fact(LinuxDistribution)
 
     is_alpine = any(
-        ["alpine" in str(name).lower() for name in [linux_name, linux_dist]]
+        "alpine" in str(name).lower() for name in [linux_name, linux_dist]
     )
 
     if not is_alpine:
@@ -73,7 +73,7 @@ def install_security_tools():
         print("[WARNING] Could not determine installed packages")
 
     # Loop over each tool in the host data
-    for tool_name, tool_data in host.data.security_tools.items():
+    for _, tool_data in host.data.security_tools.items():
         if not tool_data["install"]:
             continue
 
