@@ -340,9 +340,8 @@ def select_ssh_key() -> str:
 # Direct script execution
 try:
     if os.environ.get("SSH_KEY_PATH"):
-        SSH_KEY_PATH = os.environ.get("SSH_KEY_PATH")  # Fixed environment variable name
+        SSH_KEY_PATH = os.environ.get("SSH_KEY_PATH")  
     else:
-        # Use the new automatic key detection and selection
         SSH_KEY_PATH = select_ssh_key()
 
     if os.environ.get("JINN_ACCESS_KEY"):
