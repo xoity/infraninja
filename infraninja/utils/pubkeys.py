@@ -6,6 +6,7 @@ from pyinfra.api import deploy
 from pyinfra import host
 from pyinfra.facts.server import User, Users
 import logging
+import json
 
 logging.basicConfig(
     level=logging.INFO,
@@ -31,11 +32,13 @@ def add_ssh_keys():
     headers = {"Content-Type": "application/json", "Accept": "application/json"}
 
     try:
-        response = requests.post(login_endpoint, json=login_data, headers=headers)
+        response = requests.post(
+            login_endpoint, json=login_data, headers=headers, timeout=30
+        )  # Add timeout
 
         if response.status_code != 200:
-            print(f"Login failed: {response.text}")
-            return
+            logger.error("Login failed: %s - %s", response.status_code, response.text)
+            return False
 
         response_data = response.json()
         session_key = response_data.get("session_key")
@@ -87,5 +90,17 @@ def add_ssh_keys():
 
         return True
 
-    except requests.exceptions.RequestException as e:
-        print(f"Error occurred: {e}")
+    except requests.exceptions.Timeout:
+        logger.error("Connection timed out when contacting the API server")
+        return False
+    except requests.exceptions.ConnectionError:
+        logger.error("Failed to connect to the API server")
+        return False
+    except json.JSONDecodeError:
+        logger.error("Invalid JSON response received from the API server")
+        return False
+    except Exception as e:
+        logger.error(
+            "Unexpected error during SSH key setup: %s: %s", type(e).__name__, e
+        )
+        return False
