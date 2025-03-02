@@ -210,18 +210,19 @@ def fetch_servers(
         # Convert to host list format
         hosts = [
             (
-                server["ssh_hostname"],
+                server["hostname"],
                 {
                     **server.get("attributes", {}),
                     "ssh_user": server.get("ssh_user"),
                     "is_active": server.get("is_active", False),
                     "group_name": server.get("group", {}).get("name_en"),
                     "tags": server.get("tags", []),
+                    "ssh_key": SSH_KEY_PATH,
                     **{
                         key: value
                         for key, value in server.items()
                         if key
-                        not in ["attributes", "ssh_user", "is_active", "group", "tags"]
+                        not in ["attributes", "ssh_user", "is_active", "group", "tags", "ssh_hostname"]
                     },
                 },
             )
