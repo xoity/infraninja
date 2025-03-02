@@ -49,9 +49,7 @@ def install_security_tools():
     linux_name = host.get_fact(LinuxName)
     linux_dist = host.get_fact(LinuxDistribution)
 
-    is_alpine = any(
-        "alpine" in str(name).lower() for name in [linux_name, linux_dist]
-    )
+    is_alpine = any("alpine" in str(name).lower() for name in [linux_name, linux_dist])
 
     if not is_alpine:
         print("[ERROR] This script requires Alpine Linux")
