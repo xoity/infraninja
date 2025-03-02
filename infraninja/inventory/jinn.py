@@ -2,6 +2,7 @@
 
 import logging
 import os
+import glob
 from typing import Any, Dict, List, Tuple
 
 import requests
@@ -242,8 +243,89 @@ def fetch_servers(
         return [], "default"
 
 
+def find_ssh_keys() -> List[str]:
+    """
+    Find all SSH private keys in the user's .ssh directory.
+    Returns a list of full paths to SSH private key files.
+    """
+    ssh_dir = os.path.expanduser("~/.ssh")
+    # List all files in the .ssh directory
+    all_files = glob.glob(os.path.join(ssh_dir, "*"))
+    
+    # Filter for likely private keys (no .pub extension and not common non-key files)
+    excluded_files = ["known_hosts", "authorized_keys", "config"]
+    private_keys = [
+        f for f in all_files 
+        if os.path.isfile(f) and 
+        not f.endswith(".pub") and 
+        os.path.basename(f) not in excluded_files and
+        not os.path.basename(f).startswith(".")
+    ]
+    
+    # Common key naming patterns to prioritize
+    common_patterns = ["id_rsa", "id_ed25519", "id_dsa", "id_ecdsa", "identity"]
+    
+    # Sort keys by putting common ones first
+    def key_sort(path):
+        basename = os.path.basename(path)
+        for i, pattern in enumerate(common_patterns):
+            if pattern in basename:
+                return (0, i)  # Common patterns first, in order of commonness
+        return (1, basename)   # Then alphabetically
+    
+    return sorted(private_keys, key=key_sort)
+
+def select_ssh_key() -> str:
+    """
+    Allow user to select from available SSH keys or specify a custom path.
+    Returns the full path to the selected SSH key.
+    """
+    # Find available SSH keys
+    available_keys = find_ssh_keys()
+    
+    if not available_keys:
+        logger.warning("No SSH private keys found in ~/.ssh directory.")
+        custom_path = input("Enter the full path to your SSH private key: ")
+        return os.path.expanduser(custom_path) if custom_path else os.path.expanduser("~/.ssh/id_rsa")
+    
+    # Display available keys
+    logger.info("\nAvailable SSH keys:")
+    for i, key_path in enumerate(available_keys, 1):
+        key_display = key_path.replace(os.path.expanduser("~"), "~")
+        logger.info("%d. %s", i, key_display)
+    
+    # Add option for custom path
+    custom_option = len(available_keys) + 1
+    logger.info("%d. Specify a custom path", custom_option)
+    
+    # Get user selection
+    choice_text = input(f"\nSelect an SSH key (1-{custom_option}) [default: 1]: ").strip() or "1"
+    
+    try:
+        choice = int(choice_text)
+        if 1 <= choice <= len(available_keys):
+            selected_key = available_keys[choice-1]
+            logger.info("Selected SSH key: %s", selected_key)
+            return selected_key
+        elif choice == custom_option:
+            custom_path = input("Enter the full path to your SSH private key: ")
+            return os.path.expanduser(custom_path) if custom_path else os.path.expanduser("~/.ssh/id_rsa")
+        else:
+            logger.warning("Invalid choice, using the first key.")
+            return available_keys[0]
+    except ValueError:
+        logger.warning("Invalid input, using the first key.")
+        return available_keys[0]
+
+
 # Direct script execution
 try:
+    if os.environ.get("SSH_KEY_PATH"):
+        SSH_KEY_PATH = os.environ.get("SSH_KEY_PATH")  # Fixed environment variable name
+    else:
+        # Use the new automatic key detection and selection
+        SSH_KEY_PATH = select_ssh_key()
+        
     if os.environ.get("JINN_ACCESS_KEY"):
         auth_key = os.environ.get("JINN_ACCESS_KEY")
     else:
