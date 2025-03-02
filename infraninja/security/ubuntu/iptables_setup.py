@@ -1,3 +1,4 @@
+from importlib.resources import files as resource_files
 from pyinfra.api import deploy
 from pyinfra.operations import files, iptables, server, systemd
 
@@ -135,10 +136,13 @@ def iptables_setup():
         present=True,
     )
 
-    # Upload logrotate config from template
+    template_path = resource_files("infraninja.security.templates").joinpath(
+        "iptables_logrotate.conf.j2"
+    )
+
     files.template(
         name="Upload iptables logrotate configuration",
-        src="../infraninja/security/templates/iptables_logrotate.conf.j2",
+        src=str(template_path),
         dest="/etc/logrotate.d/iptables",
         mode="644",
     )
