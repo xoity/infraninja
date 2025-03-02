@@ -140,7 +140,7 @@ def fetch_servers(
 
         # First, display available groups sorted alphabetically
         groups = get_groups_from_data(data)
-        logger.info("\nAvailable groups (sorted alphabetically):")
+        logger.info("\nAvailable groups:")
         for i, group in enumerate(groups, 1):
             logger.info("%d. %s", i, group)
 
@@ -183,7 +183,7 @@ def fetch_servers(
         # Tag selection with sorted display
         tags = get_tags_from_data(filtered_servers)
         if tags:
-            logger.info("\nAvailable tags (sorted alphabetically):")
+            logger.info("\nAvailable tags:")
             for i, tag in enumerate(tags, 1):
                 logger.info("%2d. %s", i, tag)  # Align numbers for better readability
             if os.environ.get("JINN_TAGS"):

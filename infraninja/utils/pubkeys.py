@@ -15,70 +15,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def attempt_login(base_url, max_retries=3):
-    """Helper function to handle login with retry capability"""
-    for attempt in range(max_retries):
-        if attempt > 0:
-            logger.info("\nRetry attempt %d of %d", attempt, max_retries - 1)
-
-        username = input("Enter username: ")
-        password = getpass.getpass("Enter password: ")
-
-        login_endpoint = f"{base_url}/login/"
-        login_data = {"username": username, "password": password}
-        headers = {"Content-Type": "application/json", "Accept": "application/json"}
-
-        try:
-            response = requests.post(
-                login_endpoint, json=login_data, headers=headers, timeout=30
-            )
-
-            if response.status_code == 401:
-                # Extract a more user-friendly error message
-                try:
-                    error_data = response.json()
-                    error_message = error_data.get("message", "Authentication failed")
-                    logger.error("Login failed: %s", error_message)
-                except Exception:
-                    logger.error("Login failed: Invalid credentials")
-
-                if attempt < max_retries - 1:
-                    continue
-                return None, None
-
-            if response.status_code != 200:
-                logger.error(
-                    "Login failed: %s - %s", response.status_code, response.text
-                )
-                if attempt < max_retries - 1:
-                    continue
-                return None, None
-
-            response_data = response.json()
-            session_key = response_data.get("session_key")
-
-            if not session_key:
-                logger.error("Error: Session key missing in response.")
-                if attempt < max_retries - 1:
-                    continue
-                return None, None
-
-            return username, session_key
-
-        except requests.exceptions.Timeout:
-            logger.error("Connection timed out when contacting the API server")
-        except requests.exceptions.ConnectionError:
-            logger.error("Failed to connect to the API server")
-        except json.JSONDecodeError:
-            logger.error("Invalid JSON response received from the API server")
-        except Exception as e:
-            logger.error("Unexpected error during login: %s: %s", type(e).__name__, e)
-
-        if attempt < max_retries - 1:
-            continue
-        return None, None
-
-
 @deploy("Add SSH keys to authorized_keys")
 def add_ssh_keys():
     # Get base_url from environment variable
@@ -87,26 +23,44 @@ def add_ssh_keys():
         logger.error("Error: JINN_API_URL environment variable not set")
         return False
 
-    username, session_key = attempt_login(base_url)
-    if not session_key:
-        logger.error("Authentication failed after multiple attempts. Aborting.")
-        return False
+    username = input("Enter username: ")
+    password = getpass.getpass("Enter password: ")
 
-    auth_headers = {
-        "Authorization": f"Bearer {session_key}",
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-    }
+    login_endpoint = f"{base_url}/login/"
+    login_data = {"username": username, "password": password}
 
-    cookies = {"sessionid": session_key}
+    headers = {"Content-Type": "application/json", "Accept": "application/json"}
 
     try:
+        response = requests.post(
+            login_endpoint, json=login_data, headers=headers, timeout=30
+        )  # Add timeout
+
+        if response.status_code != 200:
+            logger.error("Login failed: %s - %s", response.status_code, response.text)
+            return False
+
+        response_data = response.json()
+        session_key = response_data.get("session_key")
+
+        if not session_key:
+            logger.error("Error: Session key missing in response.")
+            return
+
+        auth_headers = {
+            "Authorization": f"Bearer {session_key}",
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
+
+        cookies = {"sessionid": session_key}
+
         ssh_endpoint = f"{base_url}/ssh-tools/ssh-keylist/"
         ssh_response = requests.get(ssh_endpoint, headers=auth_headers, cookies=cookies)
 
         if ssh_response.status_code != 200:
             logger.error("Failed to retrieve SSH keys: %s", ssh_response.text)
-            return False
+            return
 
         ssh_data = ssh_response.json()
 
