@@ -22,7 +22,7 @@ _cached_credentials = None
 @deploy("Add SSH keys to authorized_keys")
 def add_ssh_keys():
     global _cached_ssh_keys, _cached_credentials
-    
+
     # Get base_url from environment variable
     base_url = os.getenv("JINN_API_URL")
     if not base_url:
@@ -51,7 +51,9 @@ def add_ssh_keys():
             )  # Add timeout
 
             if response.status_code != 200:
-                logger.error("Login failed: %s - %s", response.status_code, response.text)
+                logger.error(
+                    "Login failed: %s - %s", response.status_code, response.text
+                )
                 return False
 
             response_data = response.json()
@@ -70,17 +72,19 @@ def add_ssh_keys():
             cookies = {"sessionid": session_key}
 
             ssh_endpoint = f"{base_url}/ssh-tools/ssh-keylist/"
-            ssh_response = requests.get(ssh_endpoint, headers=auth_headers, cookies=cookies)
+            ssh_response = requests.get(
+                ssh_endpoint, headers=auth_headers, cookies=cookies
+            )
 
             if ssh_response.status_code != 200:
                 logger.error("Failed to retrieve SSH keys: %s", ssh_response.text)
                 return
 
             ssh_data = ssh_response.json()
-            
+
             # Store the SSH keys for future use
             _cached_ssh_keys = [key_data["key"] for key_data in ssh_data["result"]]
-            
+
         except requests.exceptions.Timeout:
             logger.error("Connection timed out when contacting the API server")
             return False
