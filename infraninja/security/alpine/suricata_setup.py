@@ -3,18 +3,19 @@ from pyinfra.api import deploy
 from pyinfra.operations import files, openrc
 from pyinfra import host
 from pyinfra.facts.files import File, Directory
+from pathlib import Path
 
 
 @deploy("Suricata Setup")
-def suricata_setup():
-    template_dir = resource_files("infraninja.security.templates.alpine")
-    config_path = template_dir.joinpath("suricata_config.j2")
-    logrotate_path = template_dir.joinpath("suricata_logrotate.j2")
+def suricata_setup() -> bool:
+    template_dir: Path = resource_files("infraninja.security.templates.alpine")
+    config_path: Path = template_dir.joinpath("suricata_config.j2")
+    logrotate_path: Path = template_dir.joinpath("suricata_logrotate.j2")
 
     # Check if Suricata is installed
     if host.get_fact(File, path="/usr/bin/suricata") is None:
         host.noop("Skip Suricata setup - suricata not installed")
-        return
+        return False
 
     # Ensure config directory exists
     if host.get_fact(Directory, path="/etc/suricata") is None:
@@ -32,6 +33,7 @@ def suricata_setup():
         dest="/etc/suricata/suricata.yaml",
     ):
         host.noop("Skip Suricata config - failed to upload configuration")
+        return False
 
     # Create log directory
     if host.get_fact(Directory, path="/var/log/suricata") is None:
@@ -59,5 +61,6 @@ def suricata_setup():
         dest="/etc/logrotate.d/suricata",
     ):
         host.noop("Skip logrotate setup - failed to upload configuration")
+        return False
 
     return True

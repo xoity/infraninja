@@ -340,7 +340,7 @@ def select_ssh_key() -> str:
 # Direct script execution
 try:
     if os.environ.get("SSH_KEY_PATH"):
-        SSH_KEY_PATH = os.environ.get("SSH_KEY_PATH")  
+        SSH_KEY_PATH = os.environ.get("SSH_KEY_PATH")
     else:
         SSH_KEY_PATH = select_ssh_key()
 
