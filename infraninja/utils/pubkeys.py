@@ -3,7 +3,7 @@ import json
 import logging
 import os
 import threading
-from typing import Any, Dict, List, Optional, TypeVar, cast
+from typing import Any, Dict, List, Optional, TypeVar
 
 import requests
 from pyinfra import host
@@ -19,7 +19,6 @@ logger = logging.getLogger(__name__)
 
 # Define type variables for more precise typing
 T = TypeVar("T")
-
 
 class SSHKeyManager:
     """
@@ -48,153 +47,124 @@ class SSHKeyManager:
                 if not SSHKeyManager._base_url:
                     logger.error("Error: JINN_API_URL environment variable not set")
 
+    def _get_base_url(self) -> Optional[str]:
+        """Get API base URL from environment."""
+        if not self._base_url:
+            self._base_url = os.getenv("JINN_API_URL")
+            if not self._base_url:
+                logger.error("Error: JINN_API_URL environment variable not set")
+                return None
+        return self._base_url
+
     def _get_credentials(self) -> Dict[str, str]:
         """Get user credentials either from cache or user input."""
-        with self._lock:
-            if SSHKeyManager._credentials is None:
-                username: str = input("Enter username: ")
-                password: str = getpass.getpass("Enter password: ")
-                SSHKeyManager._credentials = {
-                    "username": username,
-                    "password": password,
-                }
-                logger.debug("Credentials obtained from user input")
-            else:
-                logger.debug("Using cached credentials")
-            return cast(Dict[str, str], SSHKeyManager._credentials)
+        if self._credentials:
+            logger.debug("Using cached credentials")
+            return self._credentials
+
+        username: str = input("Enter username: ")
+        password: str = getpass.getpass("Enter password: ")
+        self._credentials = {"username": username, "password": password}
+        logger.debug("Credentials obtained from user input")
+        return self._credentials
+
+    def _make_auth_request(self, endpoint: str, method: str = "get", **kwargs: Any) -> Optional[requests.Response]:
+        """Make authenticated request to API."""
+        if not self._session_key:
+            return None
+
+        headers = {
+            "Authorization": f"Bearer {self._session_key}",
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
+        cookies = {"sessionid": self._session_key}
+
+        try:
+            response = requests.request(
+                method,
+                endpoint,
+                headers=headers,
+                cookies=cookies,
+                timeout=30,
+                **kwargs
+            )
+            return response if response.status_code == 200 else None
+        except requests.exceptions.Timeout:
+            logger.error("Request timed out")
+        except requests.exceptions.RequestException as e:
+            logger.error("Request failed: %s", str(e))
+        return None
 
     def _login(self) -> bool:
-        """
-        Authenticate with the API and get a session key.
+        """Authenticate with the API and get a session key."""
+        if self._session_key:
+            return True
 
-        Returns:
-            bool: True if login successful, False otherwise.
-        """
-        with self._lock:
-            if SSHKeyManager._session_key:
-                logger.debug("Using existing session key")
-                return True
+        base_url = self._get_base_url()
+        if not base_url:
+            return False
 
-            if not SSHKeyManager._base_url:
+        credentials = self._get_credentials()
+        login_endpoint = f"{base_url}/login/"
+        headers = {"Content-Type": "application/json", "Accept": "application/json"}
+
+        try:
+            response = requests.post(
+                login_endpoint,
+                json=credentials,
+                headers=headers,
+                timeout=30,
+            )
+            
+            if response.status_code != 200:
+                logger.error("Login failed: %s - %s", response.status_code, response.text)
                 return False
 
-            credentials: Dict[str, str] = self._get_credentials()
-            login_endpoint: str = f"{SSHKeyManager._base_url}/login/"
-            login_data: Dict[str, str] = credentials
-            headers: Dict[str, str] = {
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-            }
+            response_data = response.json()
+            self._session_key = response_data.get("session_key")
+            return bool(self._session_key)
 
-            try:
-                logger.debug("Attempting login to API")
-                response: requests.Response = requests.post(
-                    login_endpoint, json=login_data, headers=headers, timeout=30
-                )
-
-                if response.status_code != 200:
-                    logger.error(
-                        "Login failed: %s - %s", response.status_code, response.text
-                    )
-                    return False
-
-                response_data: Dict[str, Any] = response.json()
-                SSHKeyManager._session_key = response_data.get("session_key")
-
-                if not SSHKeyManager._session_key:
-                    logger.error("Error: Session key missing in response.")
-                    return False
-
-                logger.debug("Login successful")
-                return True
-
-            except requests.exceptions.Timeout:
-                logger.error("Connection timed out when contacting the API server")
-            except requests.exceptions.ConnectionError:
-                logger.error("Failed to connect to the API server")
-            except json.JSONDecodeError:
-                logger.error("Invalid JSON response received from the API server")
-            except Exception as e:
-                logger.error(
-                    "Unexpected error during login: %s: %s", type(e).__name__, e
-                )
+        except (requests.exceptions.RequestException, json.JSONDecodeError) as e:
+            logger.error("Login failed: %s", str(e))
             return False
 
     def fetch_ssh_keys(self, force_refresh: bool = False) -> Optional[List[str]]:
-        """
-        Fetch SSH keys from the API server.
+        """Fetch SSH keys from the API server."""
+        if self._ssh_keys and not force_refresh:
+            return self._ssh_keys
 
-        Args:
-            force_refresh: If True, bypass cache and fetch new keys.
+        if not self._login():
+            return None
 
-        Returns:
-            Optional[List[str]]: List of SSH public keys if successful, None otherwise.
-        """
-        with self._lock:
-            if SSHKeyManager._ssh_keys is not None and not force_refresh:
-                logger.debug("Using cached SSH keys")
-                return SSHKeyManager._ssh_keys
+        base_url = self._get_base_url()
+        if not base_url:
+            return None
 
-            if not SSHKeyManager._session_key and not self._login():
-                return None
+        response = self._make_auth_request(f"{base_url}/ssh-tools/ssh-keylist/")
+        if not response:
+            return None
 
-            auth_headers: Dict[str, str] = {
-                "Authorization": f"Bearer {SSHKeyManager._session_key}",
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-            }
-
-            cookies: Dict[str, str] = {
-                "sessionid": cast(str, SSHKeyManager._session_key)
-            }
-            ssh_endpoint: str = f"{SSHKeyManager._base_url}/ssh-tools/ssh-keylist/"
-
-            try:
-                logger.debug("Fetching SSH keys from API")
-                ssh_response: requests.Response = requests.get(
-                    ssh_endpoint, headers=auth_headers, cookies=cookies, timeout=30
-                )
-
-                if ssh_response.status_code != 200:
-                    logger.error("Failed to retrieve SSH keys: %s", ssh_response.text)
-                    return None
-
-                ssh_data: Dict[str, Any] = ssh_response.json()
-                SSHKeyManager._ssh_keys = [
-                    key_data["key"] for key_data in ssh_data["result"]
-                ]
-                logger.debug(
-                    "Successfully retrieved %s SSH keys", len(SSHKeyManager._ssh_keys)
-                )
-                return SSHKeyManager._ssh_keys
-
-            except Exception as e:
-                logger.error("Error fetching SSH keys: %s: %s", type(e).__name__, e)
-                return None
+        try:
+            ssh_data = response.json()
+            self._ssh_keys = [key_data["key"] for key_data in ssh_data["result"]]
+            return self._ssh_keys
+        except (KeyError, json.JSONDecodeError) as e:
+            logger.error("Failed to parse SSH keys response: %s", str(e))
+            return None
 
     @deploy("Add SSH keys to authorized_keys")
     def add_ssh_keys(self, force_refresh: bool = False) -> bool:
-        """
-        Add SSH keys to the authorized_keys file of the current user.
-
-        Args:
-            force_refresh: If True, bypass cache and fetch new keys.
-
-        Returns:
-            bool: True if keys were added successfully, False otherwise.
-        """
-        keys: Optional[List[str]] = self.fetch_ssh_keys(force_refresh)
-
+        """Add SSH keys to the authorized_keys file."""
+        keys = self.fetch_ssh_keys(force_refresh)
         if not keys:
             logger.error("No SSH keys available to deploy")
             return False
 
         try:
-            # Get current user details
-            current_user: str = host.get_fact(User)
-            user_details: Dict[str, Any] = host.get_fact(Users)[current_user]
+            current_user = host.get_fact(User)
+            user_details = host.get_fact(Users)[current_user]
 
-            # Add keys using server operation
             server.user_authorized_keys(
                 name=f"Add SSH keys for {current_user}",
                 user=current_user,
@@ -202,15 +172,11 @@ class SSHKeyManager:
                 public_keys=keys,
                 delete_keys=False,
             )
-
             return True
 
-        except (KeyError, AttributeError) as e:
-            logger.error("Error getting user details: %s", e)
         except Exception as e:
-            logger.error("Error setting up SSH keys: %s", e)
-
-        return False
+            logger.error("Error setting up SSH keys: %s", str(e))
+            return False
 
     def clear_cache(self) -> bool:
         """
