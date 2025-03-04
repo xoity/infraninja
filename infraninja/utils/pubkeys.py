@@ -3,7 +3,7 @@ import json
 import logging
 import os
 import threading
-from typing import Any, Dict, List, Optional, TypeVar
+from typing import Any, Dict, List, Optional
 
 import requests
 from pyinfra import host
@@ -17,8 +17,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Define type variables for more precise typing
-T = TypeVar("T")
 
 class SSHKeyManager:
     """
@@ -68,7 +66,9 @@ class SSHKeyManager:
         logger.debug("Credentials obtained from user input")
         return self._credentials
 
-    def _make_auth_request(self, endpoint: str, method: str = "get", **kwargs: Any) -> Optional[requests.Response]:
+    def _make_auth_request(
+        self, endpoint: str, method: str = "get", **kwargs: Any
+    ) -> Optional[requests.Response]:
         """Make authenticated request to API."""
         if not self._session_key:
             return None
@@ -82,12 +82,7 @@ class SSHKeyManager:
 
         try:
             response = requests.request(
-                method,
-                endpoint,
-                headers=headers,
-                cookies=cookies,
-                timeout=30,
-                **kwargs
+                method, endpoint, headers=headers, cookies=cookies, timeout=30, **kwargs
             )
             return response if response.status_code == 200 else None
         except requests.exceptions.Timeout:
@@ -116,9 +111,11 @@ class SSHKeyManager:
                 headers=headers,
                 timeout=30,
             )
-            
+
             if response.status_code != 200:
-                logger.error("Login failed: %s - %s", response.status_code, response.text)
+                logger.error(
+                    "Login failed: %s - %s", response.status_code, response.text
+                )
                 return False
 
             response_data = response.json()
