@@ -23,9 +23,6 @@ class NinjaConfig:
         return cls(
             api_url=os.environ.get("JINN_API_URL"),
             api_key=os.environ.get("JINN_ACCESS_KEY"),
-            ssh_key_path=Path(os.environ.get("SSH_KEY_PATH", cls.ssh_key_path)),
         )
 
-
-# Create a default config instance
 default_config = NinjaConfig()

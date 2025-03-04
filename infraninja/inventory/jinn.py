@@ -9,16 +9,13 @@ from typing import Any, Dict, List, Tuple
 
 sys.path.append(str(Path(__file__).parent.parent))
 import requests
-from inventory.config import NinjaConfig, default_config
+from inventory.config import NinjaConfig
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(message)s",
 )
 logger = logging.getLogger(__name__)
-
-# Use the default config
-config = default_config
 
 config = NinjaConfig.from_env()
 
@@ -345,14 +342,8 @@ try:
     else:
         SSH_KEY_PATH = select_ssh_key()
 
-    if os.environ.get("JINN_ACCESS_KEY"):
-        auth_key = os.environ.get("JINN_ACCESS_KEY")
-    else:
-        auth_key = input("Please enter your access key: ")
-    if os.environ.get("JINN_API_URL"):
-        api_url = os.environ.get("JINN_API_URL")
-    else:
-        api_url = input("Please enter the Jinn API base URL: ")
+    auth_key = config.api_key or input("Please enter your access key: ")
+    api_url = config.api_url or input("Please enter the Jinn API base URL: ")
 
     server_list, project_name = fetch_servers(auth_key, api_url)
 
