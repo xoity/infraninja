@@ -29,6 +29,3 @@ def motd():
         hostname=hostname,
         last_login=last_login,
     )
-
-    # The separate command to append last access time is removed
-    # as it's now handled directly in the template
