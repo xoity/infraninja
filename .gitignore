@@ -183,3 +183,4 @@ pyrightconfig.json
 #my stuff
 .vagrant
 .infraninja
+.vscode/settings.json
