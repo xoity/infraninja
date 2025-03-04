@@ -1,12 +1,15 @@
 # inventory || jinn.py
 
+import glob
 import logging
 import os
-import glob
+import sys
+from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
+sys.path.append(str(Path(__file__).parent.parent))
 import requests
-from .config import NinjaConfig, default_config
+from inventory.config import NinjaConfig, default_config
 
 logging.basicConfig(
     level=logging.INFO,
